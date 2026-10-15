@@ -1,0 +1,8 @@
+# 프로젝트 공통 설정: 모든 src 파일이 여기서 읽음
+periods:
+  warmup: ["2000-01", "2000-12"]
+  train:  ["2001-01", "2021-12"]
+  test:   ["2022-01", "2025-12"]
+data_dir: /content/data        # gdown으로 받은 위치
+seed: 42
+text_model: snunlp/KR-FinBert-SC

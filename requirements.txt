@@ -1,0 +1,10 @@
+# Colab에서 `pip freeze | grep -iE "pandas|numpy|scipy|pyyaml|openpyxl|gdown|transformers|torch"`로
+# 버전을 확인한 뒤 각 줄을 `패키지==버전`으로 고정한다 (재현성)
+pandas
+numpy
+scipy
+pyyaml
+openpyxl
+gdown
+transformers
+torch

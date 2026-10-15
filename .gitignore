@@ -1,0 +1,15 @@
+# 파이썬 부산물
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+
+# 비밀값 (API 키, 토큰)
+.env
+
+# 데이터: 드라이브에 둔다 (빅카인즈 원문은 재배포 금지)
+data/
+*.xlsx
+
+# macOS
+.DS_Store
