@@ -1,9 +1,14 @@
-"""[03] 텍스트 → 종목·월 점수 → 정형 패널 결합 → 순위 변환   담당: B-2
+"""[03] 텍스트 → 종목·월 점수 → 정형 패널 결합 → 순위 변환   담당: B-1(앞부분) · B-2(점수·결합)
 
 입력  data/processed/articles_clean.parquet  (B-1: date, title, body, source, company_name)
       data/processed/features.parquet        (A: month, code, 정형 변수, target)
 출력  data/processed/article_scores.parquet  (기사별 점수 캐시, 원문 없음)
       data/processed/model_input.parquet     (04_model 입력)
+
+B-1(정아영): load_news, clean_news → articles_clean.parquet 생성
+B-2(하이안): assign_month 이후 → model_input.parquet 생성
+이용 조건: 빅카인즈 기사 원문은 이용약관상 재배포 제한 → 저장소·제출물에 올리지 않는다.
+           수업·학술 목적으로만 쓰고 모형은 추가 학습하지 않는다(두 담당 교수님 회신, 2026-10-18).
 """
 import pandas as pd
 import yaml
@@ -11,6 +16,26 @@ import yaml
 cfg = yaml.safe_load(open("config.yaml", encoding="utf-8"))
 PROC = f"{cfg['data_dir']}/processed"
 
+
+# ===== B-1(정아영): 뉴스 수집·정제 → articles_clean.parquet =====
+
+def load_news(raw_dir: str) -> pd.DataFrame:
+    """[H8] 빅카인즈 엑셀(연 단위, 경제지 5곳) 적재.
+    입력: raw_dir — 비공개 폴더의 엑셀 파일들(저장소에 올리지 않음).
+    출력: date, title, body(200자 이내), source, company_name(검색어), excluded_flag.
+    일자는 YYYYMMDD(시각 없음)."""
+    pass
+
+
+def clean_news(df: pd.DataFrame) -> pd.DataFrame:
+    """[H8] 기사 정제 → data/processed/articles_clean.parquet 저장.
+    ① 분석제외('중복','예외') 제거 ② (제목, 언론사, 일자) 중복 제거
+    ③ 제목에 company_name이 있는 기사만 남김 ④ 기관 열에만 언급된 기사는 제외.
+    출력: date, title, body, source, company_name (원문은 저장소에 올리지 않음)."""
+    pass
+
+
+# ===== B-2(하이안): 월 배정 · 종목 매칭 · 감성 점수 · 결합 · 순위 변환 =====
 
 def assign_month(articles: pd.DataFrame, last_trading_day: pd.Series) -> pd.DataFrame:
     """기사 날짜 → 예측 월(month) 배정.
