@@ -1,10 +1,15 @@
-"""[03] 텍스트 → 종목·월 점수 → 정형 패널 결합 → 순위 변환   담당: B-2
+"""[03] 텍스트 → 종목·월 점수 → 정형 패널 결합 → 순위 변환   담당: B-1(앞부분) · B-2(점수·결합)
 
 입력  data/processed/articles_clean.csv      (B-1 가공 빅카인즈: code, month, date, title, body)
       data/processed/features.parquet        (A: month, code, 정형 변수, target)
 
 출력  data/processed/article_scores.parquet  (기사별 점수 캐시, 원문 없음)
       data/processed/model_input.parquet     (04_model 입력)
+
+B-1(정아영): load_news, clean_news → articles_clean.parquet 생성
+B-2(하이안): assign_month 이후 → model_input.parquet 생성
+이용 조건: 빅카인즈 기사 원문은 이용약관상 재배포 제한 → 저장소·제출물에 올리지 않는다.
+           수업·학술 목적으로만 쓰고 모형은 추가 학습하지 않는다(두 담당 교수님 회신, 2026-10-18).
 """
 import os
 
