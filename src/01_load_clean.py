@@ -38,7 +38,7 @@ def standardize_wide_format(
     """
     모든 배포 파일에 공통으로 적용할 기본 표준화를 수행한다.
 
-    - month 컬럼명 및 형식 통일
+    - month 컬럼명 및 형식 통일 (month = "YYYY-MM" 문자열)
     - 종목 코드 컬럼명의 문자열 형식 유지
     - 불필요한 공백 등 표기 정리
     - 날짜 및 값 컬럼 구조 확인
@@ -100,7 +100,7 @@ def convert_to_long_format(
         variable_name: 변환할 변수 이름
 
     Output:
-        month, ticker, variable_name 컬럼으로 구성된 DataFrame
+        month, code, variable_name 컬럼으로 구성된 DataFrame (code = 6자리 문자열, 02·03과 같은 키 이름)
     """
     pass
 
@@ -121,7 +121,11 @@ def handle_missing_values(
     df: pd.DataFrame,
     variable_name: str,
 ) -> pd.DataFrame:
-    """변수별 결측치 처리 규칙을 적용한다."""
+    """결측치는 채우지 않고 NaN으로 둔다.
+
+    빈칸 = 그 달 미상장·거래 없음(배포 README). 이전 값으로 채우면 수익률·모멘텀이 왜곡된다.
+    대체(월별 중앙값)와 결측 표시 열은 03 rank_transform에서 한 번만 만든다.
+    """
     pass
 
 
@@ -129,7 +133,10 @@ def handle_outliers(
     df: pd.DataFrame,
     variable_name: str,
 ) -> pd.DataFrame:
-    """변수별 이상치 처리 규칙을 적용한다."""
+    """원자료 값은 바꾸지 않는다(이상치 후보는 check_outliers로 기록만).
+
+    극단값 처리는 02에서 계산한 변수에 월별 단면 기준으로만 한다(기간을 합친 경계값은 test 누수).
+    """
     pass
 
 
@@ -144,7 +151,7 @@ def merge_variable_data(
     변수별 Long-format DataFrame을 결합한다.
 
     Join keys:
-        month, ticker
+        month, code
 
     Output:
         한 행이 한 종목의 한 시점을 나타내는 DataFrame
@@ -158,7 +165,7 @@ def validate_merged_data(
     """
     결합 후 데이터의 무결성을 검증한다.
 
-    - month + ticker 중복 여부
+    - month + code 중복 여부
     - 변수별 컬럼 존재 여부
     - 결합 전후 행 수 변화
     - 결측치 현황

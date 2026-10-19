@@ -151,16 +151,16 @@ def rank_transform(panel: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
     """월별 횡단면 순위 변환 (2.3절 규칙)
 
     입력: panel — merge_text_features 출력. cols — 변환할 변수 목록.
-    출력: panel(cols를 [-1, 1] 순위값으로 교체) + 변수명_missing(0/1)
-    규칙: 순위값 = 2·rank / (n + 1) − 1 (n = 그 달 값이 있는 종목 수, 동순위는 평균 순위).
-          결측 = 0(중앙값) + 변수명_missing. 결측이 없는 변수도 표시 열을 만들어 기간별 열 구성을 같게 한다.
+    출력: panel(cols를 0~1 순위 백분위로 교체) + 변수명_missing(0/1)
+    규칙: 순위 백분위 = rank / (n + 1) (n = 그 달 값이 있는 종목 수, 동순위는 평균 순위). 정의서 공통 규칙.
+          결측 = 0.5(중앙값) + 변수명_missing. 결측이 없는 변수도 표시 열을 만들어 기간별 열 구성을 같게 한다.
     시점: 그 달 단면만 쓰므로 기간을 넘는 통계 추정이 없다(test 누수 방지).
     """
     out = panel.copy()
     for c in cols:
         out[f"{c}_missing"] = out[c].isna().astype(int)
         g = out.groupby("month")[c]
-        out[c] = (2 * g.rank() / (g.transform("count") + 1) - 1).fillna(0)
+        out[c] = (g.rank() / (g.transform("count") + 1)).fillna(0.5)
     return out
 
 

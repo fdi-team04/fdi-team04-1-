@@ -66,7 +66,10 @@ def check_join_quality(
 
 
 def handle_missing_values(df: pd.DataFrame) -> pd.DataFrame:
-    """Handle missing external data according to variable-specific rules."""
+    """Leave missing external data as NaN (no filling here).
+
+    Median fill and *_missing flags are created once in 03 rank_transform.
+    """
     pass
 
 
@@ -99,6 +102,15 @@ def calculate_stock_issuance(df: pd.DataFrame) -> pd.DataFrame:
     pass
 
 
+def calculate_target(df: pd.DataFrame) -> pd.DataFrame:
+    """Create target = next-month adjusted return r[i,t+1], by code.
+
+    The column name must be exactly `target`: 03_text_features drops only that name
+    from the model inputs, so any other name would leak next-month returns into the features.
+    """
+    pass
+
+
 # ============================================================
 # 4. Inspect and clean derived features
 # ============================================================
@@ -109,12 +121,20 @@ def generate_feature_quality_report(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def handle_feature_missing_values(df: pd.DataFrame) -> pd.DataFrame:
-    """Handle missing derived features without introducing look-ahead bias."""
+    """Leave missing derived features as NaN (no filling here).
+
+    Median fill and *_missing flags are created once in 03 rank_transform;
+    filling earlier would make every *_missing flag 0.
+    """
     pass
 
 
 def handle_feature_outliers(df: pd.DataFrame) -> pd.DataFrame:
-    """Apply feature-specific outlier treatment while preserving valid observations."""
+    """Apply feature-specific outlier treatment while preserving valid observations.
+
+    Use monthly cross-sectional cutoffs only (e.g. 1%/99% within each month);
+    cutoffs pooled across months would leak test-period information.
+    """
     pass
 
 
