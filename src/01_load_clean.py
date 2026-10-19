@@ -2,6 +2,7 @@
 
 입력  data/raw/  (warmup·train CSV, 행=월 열=6자리 종목코드)
 출력  data/processed/panel.parquet  (long 형식: month, code, ret, me, ...)
+형식  month = "YYYY-MM" 문자열, code = 6자리 문자열, 값 컬럼은 float64
 """
 
 from pathlib import Path
