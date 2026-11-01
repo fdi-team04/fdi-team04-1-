@@ -7,6 +7,14 @@
 1. VS Code에서 `notebooks/run_colab.ipynb`를 열고 커널을 Colab에 연결한다.
 2. 셀을 위에서부터 실행한다: 데이터 받기 → 코드 받기 → `python run_all.py`
 
+로컬(Colab 없이): `config.yaml`의 `data_dir`을 내 컴퓨터 데이터 폴더(예: `data`)로 바꾼 뒤(이 변경은 커밋하지 않는다), 저장소 맨 위에서 실행한다.
+
+```bash
+git pull
+pip install -r requirements.txt
+python run_all.py
+```
+
 ## 구조
 
 | 경로 | 내용 | 담당 |
