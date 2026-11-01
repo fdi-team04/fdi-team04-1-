@@ -1,0 +1,6 @@
+data/
+.git/
+.env
+notebooks/
+__pycache__/
+.DS_Store
