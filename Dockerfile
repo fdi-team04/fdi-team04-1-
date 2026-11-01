@@ -1,4 +1,4 @@
-FROM python:3.14.6
+FROM python:3.14-alpine
 # Colab과 버전 맞추기
 
 WORKDIR /app
