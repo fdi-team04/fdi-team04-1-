@@ -1,12 +1,11 @@
 services:
   pipeline:
-    build: .
-    image: fdi-team04
+    build: ./Quant
     working_dir: /app
-    volumes:
-      - .:/app                  # 코드: 수정 즉시 반영
-      - ./data:/content/data    # config.yaml의 data_dir과 같은 경로
-      - hf-cache:/cache/hf      # FinBERT는 처음 한 번만 받음
+    volumes: # 로컬 <-> 도커 컨테이너 (동기화)
+      - ./Quant:/app   # config.yaml의 data_dir과 같은 경로
+      - ./Quant/data:/content/data
+      - hf-cache:/cache/hf      # FinBERT는 처음 한 번만 받음(?)
     env_file:
       - path: .env
         required: false         # .env 없어도 실행됨
