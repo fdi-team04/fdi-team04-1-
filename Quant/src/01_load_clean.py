@@ -13,7 +13,9 @@ import pandas as pd
 import gdown
 import yaml
 
-cfg = yaml.safe_load(open("config.yaml", encoding="utf-8"))
+CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.yaml"
+with CONFIG_PATH.open(encoding="utf-8") as config_file:
+    cfg = yaml.safe_load(config_file)
 RAW = Path(cfg["data_dir"]) / "raw"
 PROC = Path(cfg["data_dir"]) / "processed"
 
@@ -50,11 +52,11 @@ def load_provided_data_from_local() -> dict[str, pd.DataFrame]:
 
 def load_long_data_from_local() -> pd.DataFrame:
 
-    long_file = PROC / "warmup_train_long.csv"
+    long_file = PROC / "panel.parquet"
     if not long_file.exists():
         raise FileNotFoundError(f"{long_file} does not exist. Please run the data processing pipeline first.")
     
-    return pd.read_csv(long_file, encoding="utf-8-sig", parse_dates=["Month"])
+    return pd.read_parquet(long_file)
 
 
 # ==================================================
@@ -207,7 +209,7 @@ def combine_and_save_long_data(
     print(f"행 개수 검증 통과: {actual_rows}행 = {len(warmup_df)}행 + {len(train_df)}행")
 
     PROC.mkdir(parents=True, exist_ok=True)
-    combined_df.to_csv(PROC / "warmup_train_long.csv", index=False)
+    combined_df.to_parquet(PROC / "panel.parquet", index=False)
     return combined_df
 
 
