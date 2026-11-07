@@ -86,7 +86,7 @@ def score_articles(articles: pd.DataFrame, backend: str = "finbert") -> pd.DataF
     """[H8] 기사별 감성 점수 (+, 대립 −)
 
     입력: articles — B-1 가공 빅카인즈(code, month, date, title, body).
-          backend — "finbert"(config의 text_model) 또는 "llm"(모델 확정 후 추가).
+          backend — "kr finbert sc"(config의 text_model) + "llm"(upstage ai).
     출력: DataFrame(code, month, date, s), s = P(긍정) − P(부정) ∈ [−1, 1]
     규칙: 제목 + 본문(200자)을 넣는다. 모델 버전 고정, 재학습 없음.
           결과는 article_scores.parquet에 캐시해 재사용한다(원문 열은 저장하지 않음).

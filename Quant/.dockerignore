@@ -1,0 +1,9 @@
+.git/
+.env
+__pycache__/
+.DS_Store
+docker-compose.yml
+README.md
+docs/
+data/
+.gitignore
