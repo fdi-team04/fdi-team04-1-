@@ -13,3 +13,6 @@ data/
 
 # macOS
 .DS_Store
+
+# 탐색 결과물
+eda_out/
