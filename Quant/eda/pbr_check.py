@@ -23,10 +23,10 @@ LAST_TRAIN_MONTH = pd.Period("2021-12", freq="M")
 
 def to_long(df: pd.DataFrame) -> pd.DataFrame:
     lower = {c.lower(): c for c in df.columns}
-    code_col = next((lower[k] for k in ["stock_code", "code", "종목코드"] if k in lower), None)
+    code_col = next((lower[k] for k in ["stock_code", "code", "ticker", "종목코드"] if k in lower), None)
     if code_col is not None:  # 이미 long
         month_col = next(lower[k] for k in ["month", "date", "월", "날짜"] if k in lower)
-        val_col = next(c for c in df.columns if c not in (code_col, month_col) and "pbr" in c.lower())
+        val_col = next(c for c in df.columns if c.lower() == "pbr")
         out = df[[month_col, code_col, val_col]].copy()
         out.columns = ["month", "stock_code", "pbr"]
     else:  # wide: 첫 열이 월

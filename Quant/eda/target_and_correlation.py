@@ -44,6 +44,8 @@ def load_long(path: Path) -> pd.DataFrame:
     else:
         df = pd.read_csv(path, encoding="utf-8-sig", dtype={"Stock_Code": str})
 
+    df = df.rename(columns={c: "market_cap" for c in df.columns
+                            if c.lower() in ("raw_month_end_market_cap", "month_end_market_cap")})
     cols = {c.lower(): c for c in df.columns}
     need = ["month", "stock_code", "adjusted_monthly_return", "market_cap"]
     missing = [n for n in need if n not in cols]
