@@ -38,7 +38,28 @@ def load_news(raw_dir, codes):
     규칙: 일자는 YYYYMMDD(시각 없음). 본문은 200자 이내만 제공된다.
     시점: t월 말까지 공개된 기사만 이후 단계에서 쓴다(여기서는 적재만).
     """
-    pass
+    import glob
+    import os
+    import warnings
+
+    cols = {"일자": "date", "언론사": "outlet", "제목": "title",
+            "본문": "body", "분석제외 여부": "excluded_flag"}
+    parts = []
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")  # openpyxl 스타일 경고(빅카인즈 파일 형식) 무시
+        for f in sorted(glob.glob(os.path.join(raw_dir, "*.xlsx"))):
+            d = pd.read_excel(f, usecols=lambda c: c in cols)
+            d = d.rename(columns=cols)
+            for c in cols.values():
+                if c not in d.columns:
+                    d[c] = pd.NA
+            d["source_file"] = os.path.basename(f)
+            parts.append(d)
+    if not parts:
+        raise FileNotFoundError(f"{raw_dir}에 xlsx 파일이 없다")
+    df = pd.concat(parts, ignore_index=True)
+    df["date"] = pd.to_datetime(df["date"].astype(str).str[:8], format="%Y%m%d", errors="coerce")
+    return df[["date", "outlet", "title", "body", "excluded_flag", "source_file"]]
 
 
 def clean_news(df, name_dict):
@@ -53,7 +74,31 @@ def clean_news(df, name_dict):
           ④ 기관 열에만 회사명이 있는 기사는 보류(사용하지 않음)
     기사 수는 신뢰도 점검용으로만 기록하고 예측 변수로 쓰지 않는다.
     """
-    pass
+    import re
+
+    d = df.copy()
+    d["title"] = d["title"].fillna("").astype(str).str.replace("車", "차")
+    d["body"] = d["body"].fillna("").astype(str).str.replace("車", "차")
+    # ① 분석제외 표시('중복', '예외')가 있는 기사 제거
+    flag = d["excluded_flag"].fillna("").astype(str)
+    d = d[~flag.str.contains("중복|예외")]
+    # ② (제목, 언론사, 일자)가 같은 기사 제거
+    d = d.dropna(subset=["date"]).drop_duplicates(["title", "outlet", "date"])
+    # ③ 제목에 회사명이 있는 기사만 남김 (종목마다 한 행). ④ 기관 열은 쓰지 않는다.
+    out = []
+    for code, names in name_dict.items():
+        names = sorted({str(n).strip().replace("車", "차") for n in names
+                        if isinstance(n, str) and len(str(n).strip()) >= 2})
+        if not names:
+            continue
+        pat = "|".join(re.escape(n) for n in names)
+        hit = d[d["title"].str.contains(pat, regex=True)]
+        if len(hit):
+            out.append(hit.assign(code=code))
+    cols = ["code", "date", "title", "body"]
+    if not out:
+        return pd.DataFrame(columns=cols)
+    return pd.concat(out, ignore_index=True)[cols]
 
 
 def assign_month(df, trading_days):
@@ -66,7 +111,20 @@ def assign_month(df, trading_days):
     시점: 시각이 없으므로 보수적으로 마지막 거래일 당일 기사는 t+1월로 보낸다(미래정보 차단).
     기사가 없는 달은 결측으로 두고 2.3절 규칙(월별 중앙값 + 결측 표시 열)을 따른다.
     """
-    pass
+    td = pd.to_datetime(pd.Series(list(trading_days)))
+    last_td = td.groupby(td.dt.to_period("M")).max()  # 월별 마지막 거래일
+
+    d = df.copy()
+    d["date"] = pd.to_datetime(d["date"])
+    per = d["date"].dt.to_period("M")
+    cut = per.map(last_td)
+    if cut.isna().any():
+        bad = sorted(per[cut.isna()].astype(str).unique())
+        raise ValueError(f"trading_days에 없는 달의 기사가 있다: {bad}")
+    # 마지막 거래일 당일과 그 이후 기사는 다음 달(t+1)로 보낸다
+    month = per.where(d["date"] < cut, per + 1)
+    d["month"] = month.astype(str)
+    return d[["code", "month", "date", "title", "body"]]
 
 
 # ---- 아래는 B2(하이안) 담당: score_articles, aggregate_monthly, merge_text_features, rank_transform ----
