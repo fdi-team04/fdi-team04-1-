@@ -41,19 +41,105 @@ def load_news(raw_dir, codes):
     pass
 
 
+def load_name_dict(path="data/processed/company_list.csv"):
+    """company_list.csv → {종목코드: [(회사명, first_month, last_month), ...]}
+    열 이름은 code/name/first_month/last_month 를 기본으로 하고, 비슷한 이름도 받는다.
+    first_month, last_month 는 'YYYY-MM' 문자열, 비어 있으면 제한 없음."""
+    cl = pd.read_csv(path, dtype=str, encoding="utf-8")
+    pick = lambda *c: next(x for x in c if x in cl.columns)
+    ccode = pick("code", "stock_code", "종목코드")
+    cname = pick("name", "company_name", "회사명")
+    cfirst = pick("first_month", "first", "시작월")
+    clast = pick("last_month", "last", "종료월")
+    nd = {}
+    for _, r in cl.iterrows():
+        code = str(r[ccode]).zfill(6)  # 종목코드는 문자열 6자리
+        nd.setdefault(code, []).append(
+            (r[cname], r[cfirst] if pd.notna(r[cfirst]) else None,
+             r[clast] if pd.notna(r[clast]) else None))
+    return nd
+
+
 def clean_news(df, name_dict):
     """[H8] 분석제외·중복 제거와 제목 기준 종목 매칭 (+, 대립 −)
 
     입력: df — load_news 출력.
-          name_dict — {종목코드: [시점별 회사명]} (배포 자료의 company_name에서 만든다).
+          name_dict — {종목코드: [(회사명, first_month, last_month), ...]}  (load_name_dict 출력).
+                      예전 형식 {종목코드: [회사명, ...]} 도 받는다(기간 제한 없음).
     출력: DataFrame(code, date, title, body)
     규칙: ① 분석제외 표시('중복', '예외')가 있는 기사 제거
           ② (제목, 언론사, 일자)가 같은 기사 제거
           ③ 제목에 회사명이 있는 기사만 남김
+             - 회사명 앞뒤에 영문·숫자가 바로 붙으면 다른 단어로 본다(SK → SKC 제외)
+             - 더 긴 다른 회사명 안에 들어 있는 이름은 그 긴 이름을 지운 뒤 찾는다(SK → SK가스 제외)
+             - 기사 날짜의 달이 회사명의 first_month~last_month 안일 때만 그 종목에 붙인다
+             - 같은 이름이 같은 달에 두 종목 이상에 해당하면 모호 기사로 보고 뺀다
           ④ 기관 열에만 회사명이 있는 기사는 보류(사용하지 않음)
     기사 수는 신뢰도 점검용으로만 기록하고 예측 변수로 쓰지 않는다.
     """
-    pass
+    import re
+
+    d = df.copy()
+    d["title"] = d["title"].fillna("").astype(str).str.replace("車", "차")
+    d["body"] = d["body"].fillna("").astype(str).str.replace("車", "차")
+    # ① 분석제외 표시('중복', '예외')가 있는 기사 제거
+    flag = d["excluded_flag"].fillna("").astype(str)
+    d = d[~flag.str.contains("중복|예외")]
+    # ② (제목, 언론사, 일자)가 같은 기사 제거
+    d = d.dropna(subset=["date"]).drop_duplicates(["title", "outlet", "date"])
+    d = d.reset_index(drop=True)
+    d["_ym"] = d["date"].dt.strftime("%Y-%m")
+
+    # 이름 → [(종목코드, first, last)] 로 뒤집는다 (같은 이름이 여러 종목에 쓰인 경우 대비)
+    by_name = {}
+    for code, items in name_dict.items():
+        for it in items:
+            if isinstance(it, str):
+                it = (it, None, None)
+            n, first, last = it
+            if not isinstance(n, str):
+                continue
+            n = n.strip().replace("車", "차")
+            if len(n) < 2:
+                continue
+            by_name.setdefault(n, []).append((code, first, last))
+    all_names = sorted(by_name, key=len, reverse=True)
+
+    # ③ 제목에 회사명이 있는 기사만 남김 (경계 + 긴 이름 우선 + 기간)
+    edge_l, edge_r = r"(?<![0-9A-Za-z])", r"(?![0-9A-Za-z])"
+    out, n_ambiguous = [], 0
+    for n, recs in by_name.items():
+        # n 을 포함하는 더 긴 다른 회사명 (SK → SKC, SK가스 ...)
+        longer = [m for m in all_names if len(m) > len(n) and n in m]
+        titles = d["title"]
+        if longer:
+            mask_pat = "|".join(re.escape(m) for m in longer)  # 긴 이름부터 지운다
+            titles = titles.str.replace(mask_pat, " ", regex=True)
+        pat = edge_l + re.escape(n) + edge_r
+        hit = d[titles.str.contains(pat, regex=True)]
+        if hit.empty:
+            continue
+        # 기사 날짜가 해당 종목의 기간 안인지 확인
+        ok = pd.DataFrame(index=hit.index)
+        for i, (code, first, last) in enumerate(recs):
+            m = pd.Series(True, index=hit.index)
+            if isinstance(first, str) and first:
+                m &= hit["_ym"] >= first
+            if isinstance(last, str) and last:
+                m &= hit["_ym"] <= last
+            ok[i] = m
+        cnt = ok.sum(axis=1)
+        n_ambiguous += int((cnt > 1).sum())          # 같은 이름이 두 종목에 겹침 → 뺀다
+        use = ok[cnt == 1]
+        for i, (code, first, last) in enumerate(recs):
+            rows = use.index[use[i]]
+            if len(rows):
+                out.append(hit.loc[rows].assign(code=code))
+    print(f"[clean_news] 같은 이름이 두 종목에 겹쳐 뺀 기사: {n_ambiguous}건")
+    cols = ["code", "date", "title", "body"]
+    if not out:
+        return pd.DataFrame(columns=cols)
+    return pd.concat(out, ignore_index=True)[cols]
 
 
 def assign_month(df, trading_days):
