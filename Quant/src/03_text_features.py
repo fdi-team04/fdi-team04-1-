@@ -13,19 +13,10 @@ B-2(하이안): assign_month 이후 → model_input.parquet 생성
 """
 import pandas as pd
 import yaml
+import os
 
 cfg = yaml.safe_load(open("config.yaml", encoding="utf-8"))
 PROC = f"{cfg['data_dir']}/processed"
-"""[H8] 뉴스 감성 (+, 대립 −): 뉴스 수집·정제 부분
-
-담당: 정아영(B1). 점수 산출(score_sentiment, news_sentiment)은 하이안(B2)이 이어서 작성한다.
-
-이론: 기업 관련 기사에 담긴 정보는 이후 실적을 예측하지만 주가가 즉시 다 반영하지 못한다
-      (Tetlock, Saar-Tsechansky & Macskassy, 2008). 대립 가설은 비관적 논조 뒤 되돌림(Tetlock, 2007).
-자료: D5 빅카인즈 경제지 5곳(머니투데이, 매일경제, 파이낸셜뉴스, 서울경제, 한국경제), 연 단위 엑셀.
-이용 조건: 기사 원문은 이용약관상 재배포 제한 → 저장소와 제출물에 올리지 않는다(data/raw는 .gitignore).
-           수업·학술 목적으로만 쓰고 모형은 추가 학습하지 않는다(두 담당 교수님 회신, 2026-10-18).
-"""
 
 
 def load_news(raw_dir, codes):
@@ -71,6 +62,10 @@ def assign_month(df, trading_days):
 
 # ---- 아래는 B2(하이안) 담당: score_articles, aggregate_monthly, merge_text_features, rank_transform ----
 
+
+def classify_type(df):           # B-1 쪽 assign_month 다음에 추가 (뉴스 계획상 정아영 담당)
+    """news_type = 공시형 / 화제형 / 논란형. 키워드가 겹치면 공시형 우선"""
+
 def finbert_probs(texts: pd.Series) -> pd.DataFrame:
     """[H8] KR-FinBert-SC 라벨별 확률 (+, 대립 −)
 
@@ -79,7 +74,11 @@ def finbert_probs(texts: pd.Series) -> pd.DataFrame:
     규칙: 사전학습 모델을 그대로 쓰고 재학습하지 않는다(이용 조건).
           config.yaml에 text_model_rev(커밋 해시)를 적으면 그 버전으로 고정된다.
     """
-    pass
+    from transformers import pipeline
+    clf = pipeline("text-classification", model=cfg["text_model"], revision=cfg.get("text_model_rev"), top_k=None, truncation=True) # 토큰제한 512 안전장치
+    out = clf(texts.tolist(), batch_size=32) # 32개씩 묶어계산
+    probs = pd.DataFrame([{d["label"]: d["score"] for d in o} for o in out], index=texts.index)
+    return probs[["negative", "neutral", "positive"]]
 
 
 def score_articles(articles: pd.DataFrame, backend: str = "finbert") -> pd.DataFrame:
@@ -92,43 +91,65 @@ def score_articles(articles: pd.DataFrame, backend: str = "finbert") -> pd.DataF
           결과는 article_scores.parquet에 캐시해 재사용한다(원문 열은 저장하지 않음).
           입력 CSV나 backend를 바꾸면 캐시 파일을 지우고 다시 돌린다.
     """
-    pass
+    if backend == "finbert":
+        raise NotImplementedError("LLM(Upstage) 백엔드는 나중에 추가")
+    cache = f"{PROC}/article_scores.parquet" # 캐시가 있으면 재계산하지 않고 바로 읽음
+    if os.path.exists(cache):
+        return pd.read_parquet(cache)
 
+    text = articles["title"] + " " + articles["body"]
+    uniq = text.drop_duplicates()
+    print(f"[score_articles] 기사 {len(text)}건 중 고유 텍스트 {len(uniq)}건 감성점수 계산")
+    p = finbert_probs(uniq)
+    s = (p["positive"] - p["negative"]).set_axis(uniq)
+
+out = articles.drop(columns= ["title", "body"]).assign(s=text.map(s))
+out.to_parquet(cache, index=False)
+return out
 
 def aggregate_monthly(scored: pd.DataFrame) -> pd.DataFrame:
     """[H8] 종목·월 감성 지수 (+, 대립 −)
 
     입력: scored — score_articles 출력.
-    출력: DataFrame(month, code, sent, news_cnt)
-    규칙: sent = 그 달 기사 s의 평균, news_cnt = log(1 + 기사 수).
+    출력: DataFrame(month, code, topic_tone, n_topic)
+    규칙: 화제형(news_type == "화제형") 기사만 쓴다.
+          topic_tone = 그 달 화제형 기사 s의 평균, n_topic = 화제형 기사 수(점검용, 모델에 넣지 않음).
           기사가 없는 (month, code)는 행이 없으므로 결합 후 결측이 된다.
     """
-    pass
-
+    topic = scored[scored["news_type"] == "화제형"]
+    return (topic.groupby(["month", "code"], as_index=False) # 같은 달,종목 기사 끼리 묶음
+                 .agg(topic_tone=("s", "mean"), n_topic=("s", "size"))) # 기사 수
 
 def merge_text_features(panel: pd.DataFrame, text: pd.DataFrame) -> pd.DataFrame:
     """[H8] 정형 패널에 텍스트 변수 결합 (+, 대립 −)
 
     입력: panel — features.parquet(month, code, 정형 변수, target).
           text — aggregate_monthly 출력.
-    출력: panel + (sent, news_cnt, in_text_sample)
+    출력: panel + (topic_tone, n_topic, no_news)
     규칙: left join (키: month, code / validate="one_to_one"), 결합 전후 행 수가 같은지 확인.
-          in_text_sample = 뉴스 수집 대상 종목(text에 한 번이라도 나온 code)이면 1.
-          수집 대상인데 그 달 기사가 0건이면 news_cnt = 0(= log 1), sent는 결측으로 둔다.
+          no_news = 그 달 화제형 기사가 없으면 1 (수집 대상 밖 종목 포함). 이때 n_topic = 0,
+          topic_tone은 결측으로 둔다.
     """
-    pass
-
+    out = panel.merge(text, how="left", on=["month", "code"], validate="one_to_one") # 표 붙이기
+    assert len(out) == len(panel), "결합 후 행 수가 바뀜"
+    out["no_news"] = out["n_topic"].isna().astype(int)      # 기사없음
+    out["n_topic"] = out["n_topic"].fillna(0).astype(int)   # 빈칸정리
+    return out
 
 def rank_transform(panel: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
     """월별 횡단면 순위 변환 (2.3절 규칙)
 
-    입력: panel — merge_text_features 출력. cols — 변환할 변수 목록(target·in_text_sample은 제외해 원값 유지).
+    입력: panel — merge_text_features 출력. cols — 변환할 변수 목록(target·n_topic·no_news는 제외해 원값 유지).
     출력: panel(cols를 0~1 순위 백분위로 교체) + 변수명_missing(0/1)
     규칙: 순위 백분위 = rank / (n + 1) (n = 그 달 값이 있는 종목 수, 동순위는 평균 순위). 정의서 공통 규칙.
           결측 = 0.5(중앙값) + 변수명_missing. 결측이 없는 변수도 표시 열을 만들어 기간별 열 구성을 같게 한다.
     시점: 그 달 단면만 쓰므로 기간을 넘는 통계 추정이 없다(test 누수 방지).
     """
-    pass
+    g = panel.groupby("month")[cols] # 월별로 묶어 순위 변환
+    pct = g.rank() / (g.transform("count") + 1) # 동순위 평균, 결측은 제외
+    out = panel.copy()
+    out[cols] = pct.fillna(0.5) # 결측은 중앙값 0.5로 채움
+    return out.join(miss)
 
 
 if __name__ == "__main__":
