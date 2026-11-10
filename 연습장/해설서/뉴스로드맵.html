@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>4팀 뉴스 로드맵</title>
+<style>
+@font-face{font-family:NG;src:url("file:///usr/local/lib/python3.13/dist-packages/koreanize_matplotlib/fonts/NanumGothic.ttf");}
+@font-face{font-family:NG;font-weight:bold;src:url("file:///usr/local/lib/python3.13/dist-packages/koreanize_matplotlib/fonts/NanumGothicBold.ttf");}
+body{font-family:NG,sans-serif;font-size:10.3pt;line-height:1.62;color:#1d1d1f;}
+h1{font-size:20pt;margin:0 0 3mm;color:#123;}
+h2{font-size:14pt;border-bottom:2.5px solid #2f5d8a;padding-bottom:2mm;margin:8mm 0 3mm;color:#123;page-break-after:avoid;}
+h3{font-size:11.5pt;margin:5mm 0 2mm;color:#2f5d8a;page-break-after:avoid;}
+table{border-collapse:collapse;width:100%;margin:2.5mm 0;font-size:9.2pt;page-break-inside:avoid;}
+th,td{border:1px solid #c9d1da;padding:1.4mm 2mm;text-align:left;vertical-align:top;}
+th{background:#eef3f8;}
+.box{border:1px solid #c9d1da;border-left:5px solid #2f5d8a;background:#f6f9fc;padding:3mm 4mm;margin:3mm 0;page-break-inside:avoid;}
+.warn{border-left-color:#c4772b;background:#fdf7f0;}
+.key{border-left-color:#1d7a3a;background:#f2f9f4;}
+.stage{border:1px solid #c9d1da;border-radius:3mm;padding:3mm 4mm;margin:3mm 0;page-break-inside:avoid;}
+.stage h3{margin-top:0}
+.gate{background:#f2f9f4;border-left:4px solid #1d7a3a;padding:2mm 3mm;margin-top:2mm}
+.pb{page-break-before:always;}
+.small{font-size:8.8pt;color:#555;}
+code{background:#eef1f4;padding:0 1mm;border-radius:2px;font-size:9pt}
+</style></head><body>
+<h1>4팀 뉴스 데이터 가공·검증 로드맵</h1>
+<p>빅카인즈에서 받은 기사 → H3·H4 판정까지, <b>어떤 순서로, 무엇을 확인하며</b> 갈지 정한 문서. 2026-11-10 작성.</p>
+
+<div class="box warn"><b>왜 "일단 모델부터 마구 돌리면" 안 되나?</b><br>
+감성 모델(KR-FinBert-SC)은 기사 한 건에 "긍정·부정" 점수를 매길 뿐이다. 어떤 기사를 넣을지(회사와 관련 있는 기사인가? 공시인가 화제인가?)가 틀리면, 점수가 아무리 정확해도 결과가 쓰레기가 된다. 실제로 KT&amp;G 2021 파일 421건 중 <b>약 40%가 KT&amp;G와 무관한 기사</b>였다(본문 검색 때문). 이 상태로 돌리면 "삼성증권 ISA 출시" 기사 점수가 KT&amp;G 논조로 들어간다.<br>
+→ 그래서 <b>모델은 4단계</b>이고, 그 앞 세 단계를 통과 기준과 함께 먼저 끝낸다. 교수님 피드백 ④ "테스트 → 확인 → 개선 반복", ⑤ "AI에 그냥 맡기면 이상해진다"가 바로 이 얘기다.</div>
+
+<h2>전체 흐름 한눈에</h2>
+<table>
+<tr><th style="width:5%">#</th><th style="width:18%">단계</th><th style="width:27%">입력 → 출력</th><th style="width:30%">통과 기준(게이트)</th><th style="width:20%">누가</th></tr>
+<tr><td>0</td><td>수집 마감·목록 점검</td><td>드라이브 xlsx → 수집 점검표</td><td>검색목록 153줄이 모두 파일로 있음</td><td>담당 1~4 각자</td></tr>
+<tr><td>1</td><td>정리</td><td>xlsx → 기사 표(중복 제거)</td><td>건수 기록, 중복·제외 비율 확인</td><td>Colab 노트북 셀 1~2</td></tr>
+<tr><td>2</td><td>회사 매칭</td><td>기사 → (기사, 종목코드)</td><td>무작위 50건 눈 확인, 틀린 매칭 5% 미만</td><td>노트북 셀 3 + 사람 1명</td></tr>
+<tr><td>3</td><td>유형 분류</td><td>→ 공시형/논란형/화제형/기타</td><td>새 100건, 사람 2명 정답과 일치 80% 이상</td><td>LLM 또는 규칙 + 사람 2명</td></tr>
+<tr><td>4</td><td>감성 점수</td><td>→ 기사별 s = P(긍정)−P(부정)</td><td>뚜렷한 기사 30건에서 방향 맞음</td><td>노트북 셀 4 (GPU)</td></tr>
+<tr><td>5</td><td>월 배정·집계</td><td>→ 종목×월 논조, 기사 수</td><td>달별 기사 수 그래프에 빈 구간 없음</td><td>노트북 셀 5</td></tr>
+<tr><td>6</td><td>판정</td><td>→ H3 단계별 IC·FM, H4 설거지 표</td><td>지금(H1·H2)과 같은 규칙</td><td><code>step9_news_h3h4.py</code></td></tr>
+</table>
+
+<h2 class="pb">단계별 상세</h2>
+<div class="stage"><h3>0. 수집 마감과 목록 점검 (마감 11/22)</h3>
+<p>검색목록 엑셀(<code>뉴스수집_검색목록_상위100_최종.xlsx</code>)의 "실제 건수·완료" 칸과 드라이브 파일을 맞춰 본다. 11/10 밤 드라이브 기준 대략 진행: 담당1 33/37, 담당2 38/39, <b>담당3 15/39</b>, 담당4 31/40 (파일 이름 순번 기준).</p>
+<p><b>주의:</b> 파일 이름 순번이 검색목록 순번과 어긋난 사례가 있다(담당2 <code>034_2021</code> 파일 내용은 KT&amp;G인데 목록 34번은 SK하이닉스 묶음). 그래서 <b>파일 이름으로 회사를 정하지 않고</b>, 2단계에서 제목으로 회사를 찾는다.</p>
+<div class="gate">게이트: 153줄 모두 "완료 + 파일 있음". 못 채운 줄은 "미수집"으로 표시 → 6단계에서 그 회사·기간을 분석에서 뺀다(기사 없음으로 착각 금지).</div></div>
+
+<div class="stage"><h3>1. 정리</h3>
+<ul><li>열: 뉴스 식별자, 일자, 언론사, 제목, 본문(200자), 분석제외 여부.</li>
+<li>빅카인즈 "분석제외 여부"가 중복·예외인 기사 삭제 (KT&amp;G 2021: 421 → 404).</li>
+<li>언론사 5곳만. <b>뉴스 식별자</b>가 같은 기사, (제목, 언론사, 일자)가 같은 기사는 하나만 — OR 묶음 검색끼리 같은 기사가 여러 파일에 들어 있기 때문.</li></ul>
+<div class="gate">게이트: 파일별 "읽은 건수 → 남은 건수"를 표로 남긴다. 한 파일에서 20% 넘게 빠지면 그 파일을 열어 이유 확인.</div></div>
+
+<div class="stage"><h3>2. 회사 매칭 (가장 중요)</h3>
+<ul><li><b>제목</b>에 회사 이름(현재 이름 + 옛 이름)이 있는 기사만 남긴다. 본문만 언급한 기사는 버린다.</li>
+<li>짧은 영문 이름 보호: "KT"로 "KT&amp;G", "KTB"를 잡지 않는다. 긴 이름 먼저("SK하이닉스"가 "SK"보다 먼저).</li>
+<li>두 회사에 같은 이름이 걸리면(모호) 그 이름은 쓰지 않는다. 제목에 회사가 둘이면 두 회사 모두에 붙인다.</li>
+<li>옛 이름 표는 추정이므로, 매칭 결과에서 회사별 기사 수가 0이거나 갑자기 튀는 해를 확인한다.</li></ul>
+<div class="gate">게이트: 무작위 50건을 사람이 보고 "이 기사가 정말 이 회사 기사인가" 체크 → 틀린 것 5% 미만(3건 이하). 넘으면 이름 표를 고치고 다시.</div></div>
+
+<div class="stage"><h3>3. 유형 분류 (교수님 피드백 ①②⑤)</h3>
+<p>우선순위: 광고 → 공시형 → 논란형 → 화제형 → 기타. 분석에는 <b>화제형</b>을 쓰고(H3), 논란형은 파일럿 기준 통과 시 별도 변수, 공시형은 일단 제외(선택지는 아래).</p>
+<p><b>팀이 먼저 정할 것 (11/10 시험 100건에서 나온 문제):</b></p>
+<table><tr><th style="width:35%">정할 것</th><th>왜</th></tr>
+<tr><td>사회공헌·수상·후원 기사 = 광고? 화제형?</td><td>시험 100건 중 28건이 여기에 해당. 어느 쪽이냐에 따라 화제형 수가 크게 바뀜</td></tr>
+<tr><td>복합=Y 기사 처리</td><td>"유상증자가 논란" → 순서 규칙상 공시형이지만 교수님 예시는 논란형. 복합=Y는 사람이 최종 판단하는 규칙 추가 권장</td></tr>
+<tr><td>시황·증권사 리포트·주가 기사</td><td>주가로 쓰인 기사는 수익률 정보가 섞여 쓰지 않는 게 원칙 → "기타"로 고정</td></tr>
+<tr><td>공시형 처리</td><td>(가) 제외 / (나) 별도 변수 / (다) 실적 서프라이즈만 화제형으로</td></tr></table>
+<p><b>시험 절차:</b> ① 2단계를 통과한(제목 매칭된) 기사에서 <b>여러 회사·여러 연도</b>로 새 100건 무작위(시드 고정). 지난 파일럿 100건과 겹치지 않게. ② 두 사람이 <b>서로 보지 않고</b> 정답을 단다. ③ 두 사람이 다른 기사는 셋째 사람이 결정. ④ 분류기(LLM 또는 키워드 규칙)와 비교.</p>
+<p class="small">11/10 예비 결과: LLM 분류(팀 지시문)와 키워드 규칙 v1의 일치율 35% → 키워드 v1은 그대로 못 씀. 전체 기사를 외부 LLM에 넣는 것은 빅카인즈 이용 조건 확인 후 결정.</p>
+<div class="gate">게이트: 분류기와 사람 정답 일치 80% 이상, 화제형에 대해서는 따로 정밀도(화제형이라고 한 것 중 진짜 화제형 비율)도 80% 이상. 미달이면 규칙·지시문을 고치고 <b>새</b> 100건으로 다시(같은 100건 재사용 금지: 점수가 부풀려짐).</div></div>
+
+<div class="stage"><h3>4. 감성 점수</h3>
+<ul><li>KR-FinBert-SC 그대로(재학습 금지). 입력 = 제목 + 본문 200자. s = P(긍정) − P(부정), −1~+1.</li>
+<li>Colab T4 GPU에서 실행(노트북 <code>4팀_뉴스점수_Colab.ipynb</code>). 기사별 점수를 캐시해 끊겨도 이어서.</li>
+<li>모델 버전(커밋)을 기록한다.</li></ul>
+<div class="gate">게이트: 누가 봐도 긍정(예: "사상 최대 실적"), 부정(예: "압수수색") 기사 각 15건에서 부호가 맞는지 확인. 20% 넘게 틀리면 입력(제목만 vs 제목+본문)을 바꿔 비교.</div></div>
+
+<div class="stage"><h3>5. 월 배정과 집계</h3>
+<ul><li>그달 <b>마지막 거래일 당일과 그 이후</b> 기사는 다음 달로(그날 종가에 이미 반영됐는지 알 수 없으므로).</li>
+<li>종목×월로 묶어: 화제형 평균 논조(<code>topic_tone</code>), 화제형 기사 수, 공시형·논란형 수와 논조.</li>
+<li>원문은 여기서 버리고, <b>숫자만</b> 드라이브 밖으로 나온다(<code>news_monthly.csv</code>, <code>news_coverage.csv</code>).</li></ul>
+<div class="gate">게이트: 연도별·회사별 기사 수 그래프에서 갑자기 0이 되는 구간 확인 → 수집 누락이면 0단계로.</div></div>
+
+<div class="stage"><h3>6. 판정 (H3·H4)</h3>
+<ul><li><b>평가 대상:</b> 매년 직전 연도 말 시총 상위 100 중 그해 기사가 수집된 종목.</li>
+<li><b>H3 쓸모:</b> 3단계(수급까지) + 화제 논조 + 화제 기사 없음 표시 = 4단계. 평균 IC↑ &amp; 11년 중 6년.</li>
+<li><b>H3 방향:</b> Fama-MacBeth에서 화제 논조 계수가 + 이고 t ≥ 2. 논조 3분위 표(상−하)도 같이.</li>
+<li><b>H4:</b> 호재 종목(화제 기사 있고 논조가 그달 중간값 초과) 안에서 개인 많음 − 적음, 빼기 기사 없는 종목 안의 같은 차이. − 이고 t ≤ −2 → 지지. 강건성: 호재 기준 "논조 &gt; 0", 대형/소형 분리.</li></ul>
+<div class="gate">게이트: 판정 규칙은 지금 문서 그대로 고정. 결과를 보고 호재 기준이나 분위 수를 바꾸지 않는다.</div></div>
+
+<h2>H1 결과가 뉴스 분석에 주는 의미</h2>
+<div class="box">H1에서 개인 순매수가 <b>+</b>(개인이 산 종목이 다음 달 더 오름)로 나왔다. 그래서 H4에서 "호재 종목 안 개인 많음 − 적음"만 보면 그냥 H1의 + 효과가 보일 가능성이 크다. <b>기사 없는 종목에서의 같은 차이를 빼는(차이의 차이)</b> 설계가 그래서 필수다. 호재일 때만 + 가 줄거나 − 로 뒤집히면 그것이 "호재에 개인이 몰리면 더 약하다(설거지)"의 증거다.</div>
+
+<h2>일정과 역할</h2>
+<table><tr><th style="width:14%">날짜</th><th>할 일</th><th style="width:22%">담당(제안)</th></tr>
+<tr><td>11/11~13</td><td>3단계 규칙 결정(광고·복합·시황), 2단계 매칭 50건 확인</td><td>팀 회의 / 정아영</td></tr>
+<tr><td>11/14~16</td><td>분류 시험 2차: 새 100건, 사람 2명 정답 → 80% 확인</td><td>위영섭·정아영</td></tr>
+<tr><td>~11/22</td><td>수집 마감(담당 3·4 잔여)</td><td>담당 3·4</td></tr>
+<tr><td>11/22~24</td><td>노트북 전체 실행 → 감성 점수 → 집계 파일</td><td>하이안</td></tr>
+<tr><td>11/25</td><td>H3·H4 판정, 변수·설정 고정</td><td>전원</td></tr></table>
+<p class="small">파일: Colab 노트북 <code>연습장/news/4팀_뉴스점수_Colab.ipynb</code>, 처리 코드 <code>연습장/news/news_core.py</code>, 판정 코드 <code>연습장/step9_news_h3h4.py</code>. 원문 데이터와 사람 확인용 샘플(제목 포함)은 비공개 드라이브에만.</p>
+</body></html>
