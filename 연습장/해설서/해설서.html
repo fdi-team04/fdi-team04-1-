@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<title>4팀 변수 판정 해설서</title>
+<style>
+@font-face{font-family:NG;src:url("file:///usr/local/lib/python3.13/dist-packages/koreanize_matplotlib/fonts/NanumGothic.ttf");}
+@font-face{font-family:NG;font-weight:bold;src:url("file:///usr/local/lib/python3.13/dist-packages/koreanize_matplotlib/fonts/NanumGothicBold.ttf");}
+@page{size:A4;margin:16mm 15mm 16mm 15mm;}
+body{font-family:NG,sans-serif;font-size:10.3pt;line-height:1.62;color:#1d1d1f;}
+h1{font-size:21pt;margin:0 0 4mm;color:#123;}
+h2{font-size:15pt;border-bottom:2.5px solid #2f5d8a;padding-bottom:2mm;margin:9mm 0 3mm;color:#123;page-break-after:avoid;}
+h3{font-size:12pt;margin:6mm 0 2mm;color:#2f5d8a;page-break-after:avoid;}
+p{margin:1.6mm 0;}
+table{border-collapse:collapse;width:100%;margin:2.5mm 0;font-size:9.2pt;page-break-inside:avoid;}
+th,td{border:1px solid #c9d1da;padding:1.4mm 2mm;text-align:left;vertical-align:top;}
+th{background:#eef3f8;}
+td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.ok{color:#1d7a3a;font-weight:bold}.no{color:#b3261e;font-weight:bold}.mid{color:#8a6d00;font-weight:bold}
+.box{border:1px solid #c9d1da;border-left:5px solid #2f5d8a;background:#f6f9fc;padding:3mm 4mm;margin:3mm 0;page-break-inside:avoid;}
+.warn{border-left-color:#c4772b;background:#fdf7f0;}
+.key{border-left-color:#1d7a3a;background:#f2f9f4;}
+figure{margin:3mm 0;page-break-inside:avoid;text-align:center;}
+figure img{max-width:100%;max-height:118mm;}
+figcaption{font-size:8.8pt;color:#555;margin-top:1mm;}
+.read{border:1px dashed #9fb3c8;padding:2.5mm 4mm;margin:2mm 0 4mm;page-break-inside:avoid;}
+.read b.t{color:#2f5d8a;}
+.pb{page-break-before:always;}
+.small{font-size:8.8pt;color:#555;}
+.cover{height:250mm;display:flex;flex-direction:column;justify-content:center;}
+.cover .sub{font-size:12pt;color:#444;}
+.tl{display:flex;gap:1mm;margin:2mm 0;font-size:8pt}
+.tl div{padding:1.2mm 0;text-align:center;color:#fff;border-radius:2px}
+ol li,ul li{margin:0.8mm 0;}
+code{background:#eef1f4;padding:0 1mm;border-radius:2px;font-size:9pt}
+</style></head><body>
+
+<div class="cover">
+<h1>4팀 변수 판정 해설서</h1>
+<p class="sub">기준선 → 통제 → 보강 → 수급(H1·H2)<br>데이터를 열어 보고, 규칙을 먼저 정하고, 실제로 찍어 본 기록</p>
+<p style="margin-top:10mm">금융데이터인텔리전스(2026-2) 4팀 · 2026-11-10 실행 · 검증 구간 2011~2021 (131개월)</p>
+<div class="box key" style="margin-top:12mm">
+<b>한 쪽 요약</b>
+<ol>
+<li><b>남은 변수:</b> 베타·규모·가치(기준선, 판정 면제) + 단기 반전·모멘텀(통제) + 고유변동성(보강) + 개인·외국인 순매수(수급). <b>주식 발행</b>은 혼자서는 예측을 전혀 못 올려 탈락 후보.</li>
+<li><b>예측력(평균 IC):</b> 0.051 → 0.077 → 0.088 → 0.092. 네 단계 모두 "평균 IC↑ & 11년 중 6년 이상↑" 규칙 통과. 정답을 섞은 누수 점검은 −0.001(0 근처, 정상).</li>
+<li><b>H1(개인이 사면 약하다): 반대로 나옴.</b> 개인이 많이 산 종목이 다음 달 0.70%p 더 높음(t +3.1). 다른 변수를 다 같이 넣어도(Fama-MacBeth t +3.1), 극단값·퇴장 종목·거래정지를 바꿔 넣어도 그대로.</li>
+<li><b>H2(외국인이 사면 강하다): 확인하지 못함</b>(t −1.2). 2002~2021로 넓히면 오히려 반대 방향(t −2.7).</li>
+<li><b>쓸모와 방향은 따로:</b> 개인 순매수는 방향은 가설과 반대지만, 알면 예측이 좋아짐(11년 모두 개선). 그래서 "변수는 남기고, 가설은 기각"이 동시에 성립.</li>
+<li><b>주의:</b> 예측력은 대부분 중소형주에서 나옴(시총 상위 100 안에서는 IC 0.023).</li>
+</ol></div>
+</div>
+
+<h2 class="pb">1. 처음 보는 사람을 위한 용어 6개</h2>
+<table>
+<tr><th style="width:22%">용어</th><th>뜻 (쉬운 말)</th></tr>
+<tr><td>t월, t+1월</td><td>t월 = "이번 달", t+1월 = "다음 달". 우리는 <b>이번 달 말까지 알 수 있는 정보</b>로 <b>다음 달 수익률 순위</b>를 맞힌다.</td></tr>
+<tr><td>순위(0~1)</td><td>매달 종목들을 줄 세워 꼴찌 0, 1등 1로 바꾼 값. 단위가 다른 변수(원, %, 배)를 같은 자로 재기 위해 쓴다. 극단값(예: +1,600%)도 그냥 "1등"이 되어 영향이 줄어든다.</td></tr>
+<tr><td>IC (정보계수)</td><td>매달 "우리가 매긴 순위"와 "실제 다음 달 수익률 순위"가 얼마나 비슷한지(Spearman 순위상관). 1이면 완벽, 0이면 동전 던지기, −1이면 정반대. <b>주식에서는 0.05만 넘어도 쓸모 있는 수준</b>으로 본다.</td></tr>
+<tr><td>5분위</td><td>매달 변수 값으로 종목을 5줄로 나눔(하위 20% = 1분위 … 상위 20% = 5분위). 각 줄의 다음 달 평균 수익률을 막대로 그리면 방향이 눈에 보인다. "Q5−Q1" = 5분위 − 1분위 차이.</td></tr>
+<tr><td>t값</td><td>"이 차이가 우연일 가능성이 얼마나 낮은가". 월별 값의 평균 ÷ 흔들림(표준오차). |t|≥2면 우연으로 보기 어렵고(약 95%), |t|≥3이면 거의 확실(약 99.7%).</td></tr>
+<tr><td>Fama-MacBeth</td><td>매달 "다음 달 수익률 = 여러 변수의 합" 회귀를 따로 돌리고, 계수의 월평균과 t값을 본다. <b>다른 변수를 같이 넣은 상태에서</b> 그 변수 하나의 방향(+/−)을 확인하는 도구.</td></tr>
+</table>
+
+<h2>2. 판정 규칙 — 결과를 보기 전에 정했다</h2>
+<p>교수님 피드백: "예상이 아니라 결과", "결론을 정해 두지 말고 데이터로 확인하라". 그래서 <b>숫자를 보기 전에</b> 아래 규칙을 고정했다. 결과를 보고 규칙을 바꾸면 원하는 결론을 만들 수 있기 때문이다.</p>
+<table>
+<tr><th style="width:17%">질문</th><th style="width:20%">도구</th><th>규칙</th></tr>
+<tr><td><b>쓸모</b><br>이 변수를 알면 예측이 좋아지나?</td><td>XGBoost 누적 학습 → 단계별 IC</td><td>직전 단계보다 <b>① 검증 131개월 평균 IC가 오르고 ② 11개 검증 연도 중 6년 이상 연평균 IC가 오르면</b> OK. 둘 중 하나라도 못 하면 NO.<br>기준선(베타·규모·가치)은 출발점이라 판정 면제.</td></tr>
+<tr><td><b>방향</b><br>가설이 말한 쪽(+/−)인가?</td><td>Fama-MacBeth, 5분위 표</td><td>부호가 가설과 같고 |t|≥2 → <span class="mid">어느 정도 지지</span>, |t|≥3 → <span class="ok">확실하게 지지</span><br>부호가 반대이고 |t|≥2 → <span class="no">반대 방향으로 유의</span><br>|t|&lt;2 → <b>확인하지 못함</b> ("틀렸다"가 아님)</td></tr>
+<tr><td>참고</td><td>증가분 t</td><td>매달 (이번 단계 IC − 직전 단계 IC)의 평균 ÷ 표준오차. 판정에는 쓰지 않고 참고로만 적는다.</td></tr>
+</table>
+<div class="box"><b>왜 쓸모와 방향을 따로 보나?</b><br>
+XGBoost는 계수가 없는 "나무" 모형이라 변수가 +인지 −인지 말해 주지 않는다. "이 정보를 알면 줄 세우기가 나아지나"만 알려 준다. 반대로 Fama-MacBeth는 방향은 알려 주지만 비선형 관계는 놓친다.<br>
+<b>비유:</b> 일기예보에서 "습도"는 비가 올지 말지를 맞히는 데 쓸모가 있다(쓸모). 그런데 "습도가 높으면 비가 온다"는 가설이 맞는지는 따로 확인해야 한다(방향). 습도가 높을수록 비가 <i>덜</i> 오는 이상한 동네라도, 습도는 여전히 예보에 쓸모 있다.<br>
+→ 그래서 <b>"변수는 남는다(쓸모 OK)" + "가설은 반대로 나왔다(방향 반대)"</b>가 동시에 가능하다. H1이 바로 이 경우다.</div>
+<div class="box"><b>질문: XGBoost IC에도 t≥2 규칙을 똑같이 쓰나?</b> → 아니다. XGBoost의 IC 자체는 거의 항상 t가 크다(예: 기준선만으로 t 6.2). 우리가 궁금한 건 "더했을 때 나아졌나"라서 <b>증가분</b>과 <b>이긴 해 수</b>로 판정한다. 증가분 t는 참고로 적어 두고, 11/16에 교수님께 보조 근거로 써도 되는지 묻는다.</div>
+
+<h2 class="pb">3. 데이터 열어 보기 — 무엇을 열었고, 무엇이 눈에 띄었나</h2>
+<table>
+<tr><th style="width:26%">파일 (출처: 팀 드라이브, 은예원)</th><th>내용</th></tr>
+<tr><td><code>joined_investor.csv</code> (33MB)</td><td>배포 데이터(월 수익률·시가총액·주가·주식 수)에 개인·외국인 순매수 금액과 비율을 붙인 long 파일. 2000-01~2021-12, 264개월 × 1,086종목 = 286,704줄.</td></tr>
+<tr><td><code>monthly_pbr_2000_2025.csv</code> (27MB)</td><td>월별 PBR. 가치 변수(1/PBR)용. KOSPI 밖 종목도 있음.</td></tr>
+<tr><td><code>RiskFree_Rate_CD91.csv</code></td><td>CD 91일물 금리(연 %). 베타·고유변동성의 초과수익률 계산용.</td></tr>
+</table>
+<p><b>기본 점검 결과:</b> 월+종목 중복 0건, 시가총액 0 이하 0건, 수익률 있는데 시총 없는 칸 0건. 순매수 비율(<code>retail_to_mcap</code>)을 "t월 순매수 ÷ t−1월 시총"으로 직접 다시 계산해 보니 파일 값과 오차 0 → <b>예원님 매칭은 정확</b>. 순매수가 채워진 비율은 모든 연도에서 99.9~100%(이전에 걱정했던 "외국인 555종목 vs 개인 835종목" 문제는 이 파일에서 해결됨).</p>
+<figure><img src="../out/fig0_datamap.png"><figcaption>그림 0. 데이터 지도</figcaption></figure>
+<div class="read"><b class="t">그림 0 읽는 법</b><br>
+<b>① 종목 수</b>: 매달 수익률이 있는 종목은 636개(2005-06)~752개(2021-12). 2005년 바닥 후 꾸준히 늘었다. 회색 = 2000년 warmup(변수 계산용, 학습·평가 제외), 연두 = 검증 구간.<br>
+<b>② 변수 채움 비율</b>: 빨간 선(가치)이 2002년 4월 전에 0%, 그리고 2008년 가을에 <b>4개월 동안 0%로 뚝 떨어진다</b>. 파란 선(베타)은 60개월 중 최소 24개월이 쌓여야 계산되므로 2002년부터 시작.<br>
+<b>③ 극단 수익률과 퇴장</b>: 한 달에 +100% 넘게 오른 칸(주황)이 2000~2005년에 몰려 있다. 회색은 그해 데이터에서 사라진(상장폐지 등) 종목 수.<br>
+<b>④ 외국인 0</b>: 2000~2004년에는 칸의 22~40%에서 외국인 순매수가 정확히 0 → 외국인이 아예 거래하지 않은 소형주. 2015년 이후는 1~2%.</div>
+
+<h3>주목할 점 14가지 — 무엇이 결과에 영향을 줄 수 있고, 어떻게 처리했나</h3>
+<table>
+<tr><th style="width:3%">#</th><th style="width:30%">발견</th><th style="width:32%">왜 문제가 될 수 있나</th><th>처리와 결과에 준 영향</th></tr>
+<tr><td>1</td><td>빈칸 37%(수익률 있는 칸 180,939 / 286,704)</td><td>빈칸을 0으로 읽으면 "수익률 0%"로 오해</td><td>상장 전·폐지 후의 <b>구조적 빈칸</b>. 수익률이 있는 칸만 분석 대상. 영향 없음.</td></tr>
+<tr><td>2</td><td>1,086종목 중 43개는 수익률이 한 번도 없음</td><td>종목 수를 부풀림</td><td>자동으로 빠짐(실제 분석 1,043종목).</td></tr>
+<tr><td>3</td><td>중간에 사라진 종목 291개, 새로 생긴 종목 약 340개</td><td>살아남은 종목만 있으면 "생존 편향"(망한 회사가 빠져 수익률이 부풀려짐)</td><td>퇴장 종목도 <b>퇴장 전까지</b> 데이터에 있음 → 생존 편향은 작다. 매달 "그달 있던 종목"만 고르고, 오늘 기준으로 종목을 고르지 않았다.</td></tr>
+<tr><td>4</td><td>퇴장 직전 달은 "다음 달 수익률"이 없음: 422줄(0.24%)</td><td>망하기 직전 큰 손실이 빠지면, 그 종목을 많이 산 쪽이 좋아 보일 수 있음(특히 H1)</td><td>평가에서 빠짐. <b>점검</b>: 사라진 수익률을 −30%, −100%로 채워도 H1 계수는 +0.82(t 3.3), +0.96(t 3.4)로 <b>오히려 커짐</b> → 결론 영향 없음(8절 표).</td></tr>
+<tr><td>5</td><td>월 +100% 초과 460건(최대 +1,623%, 2000-02), −90% 이하 46건</td><td>평균을 쓰는 계산(5분위 평균, Fama-MacBeth)을 몇 종목이 흔듦</td><td>지우지 않음(진짜일 수 있음: 감자·재상장 등 → 예원님 확인 요청). XGBoost 정답과 IC는 <b>순위</b>라 영향 작음. Fama-MacBeth는 매달 상하위 1%를 잘라도 H1 t 2.8로 유지.</td></tr>
+<tr><td>6</td><td>수익률이 정확히 0인 칸 1,896건(매년 약 1%)</td><td>거래정지 종목일 수 있음 → 가짜 신호</td><td>제외하고 다시 해도 H1 +0.79(t 3.2) 동일.</td></tr>
+<tr><td>7</td><td>한 종목의 수익률이 중간에 끊긴 구간 156건</td><td>끊긴 뒤 수익률을 "다음 달"로 착각하면 미래 정보 누수</td><td>정답(target)은 <b>바로 다음 달 줄이 있을 때만</b> 만든다. 몇 달 건너뛴 수익률은 정답으로 쓰지 않음.</td></tr>
+<tr><td>8</td><td>PBR 파일이 <b>2002-04부터</b>만 있음</td><td>2001-01~2002-03 가치 변수 없음</td><td>학습 첫 구간(2001~2010) 가치 결측 18.7%. 빈칸은 순위 0.5(중간) + "결측 표시 열"을 넣어 모델이 "모름"을 알게 함. <b>검증 구간 결측은 0.9%</b>라 판정에는 영향 작음. Fama-MacBeth는 2002-04부터 시작.</td></tr>
+<tr><td>9</td><td><b>2008-08~11 PBR 4개월이 통째로 없음</b></td><td>금융위기 한복판에 가치 정보가 없음</td><td>그 4개월은 결측 표시로 학습. 검증(2011~)에는 없음 → 판정 영향 없음. <b>보고서에 반드시 적을 것</b>(원인은 예원님 확인 요청).</td></tr>
+<tr><td>10</td><td>PBR = 0인 칸 15.6%(2002~05년엔 49~64%), 음수는 0건</td><td>0이면 1/PBR = 무한대. 자본잠식이 0으로 들어갔을 가능성</td><td>PBR ≤ 0 → 결측. 2002~05년 가치 정보가 얇다는 점을 기록.</td></tr>
+<tr><td>11</td><td>베타는 60개월(최소 24) 필요 → 2002-01부터, 신규 상장 종목은 첫 2년 결측</td><td>신규 종목이 체계적으로 빠짐</td><td>결측 표시 열로 처리. 검증 구간 베타 결측 4.1%.</td></tr>
+<tr><td>12</td><td>외국인 순매수 = 0이 2000~04년 22~40%</td><td>결측인지 진짜 0인지</td><td>"외국인이 거래하지 않았다"는 <b>진짜 0</b>으로 둠. 검증 구간은 2.8%라 영향 작음. 다만 <b>2002~2021 전체로 H2를 볼 때</b>는 앞쪽 정보가 얇다는 점을 감안.</td></tr>
+<tr><td>13</td><td>개인 순매수 비율이 시총의 50%를 넘는 칸 41건(최대 7.1배)</td><td>몇 칸이 H1 결과를 만들었을 수 있음</td><td>|순매수 비율| &gt; 20% 칸을 빼도 H1 +0.78(t 3.2) 동일. 순위 변환으로 영향도 작음.</td></tr>
+<tr><td>14</td><td>2021-12의 정답은 2022-01 수익률(=test)</td><td>test 정보 누수</td><td>2022년 이후는 읽자마자 버림 → 검증은 2011-01~2021-11 <b>131개월</b>(132가 아님).</td></tr>
+</table>
+<p class="small">추가로 알아 둘 것: 시장수익률은 KOSPI 지수가 아니라 이 데이터 종목의 <b>직전 달 시총 가중 평균</b>으로 직접 만들었다. 가장 큰 종목(삼성전자)의 시총 비중이 2001년 15.7% → 2021년 23.5%라, 베타는 "삼성전자와 얼마나 같이 움직이나"에 가깝게 된다(베타 해석 시 주의).</p>
+
+<h2 class="pb">4. 변수 만들기 — 모두 "t월 말까지 알 수 있는 정보"</h2>
+<table>
+<tr><th style="width:15%">묶음</th><th style="width:17%">변수</th><th>만드는 법</th><th style="width:16%">예상 방향</th></tr>
+<tr><td rowspan="3">기준선<br><span class="small">교과서 위험 요인. 판정 면제</span></td><td>베타</td><td>최근 60개월(최소 24) 종목 초과수익률을 시장 초과수익률에 회귀한 기울기</td><td>+ (위험이 크면 보상)</td></tr>
+<tr><td>규모</td><td>ln(t월 말 시가총액)</td><td>− (작은 회사가 높음)</td></tr>
+<tr><td>가치</td><td>1/PBR (PBR ≤ 0은 결측)</td><td>+ (싼 주식이 높음)</td></tr>
+<tr><td rowspan="2">통제<br><span class="small">수급 효과와 섞이면 안 되는 것</span></td><td>단기 반전</td><td>t월 수익률</td><td>− (많이 오르면 되돌림)</td></tr>
+<tr><td>모멘텀</td><td>t−11 ~ t−1월 누적 수익률(t월 제외, 11개월 중 8개월 이상)</td><td>± (한국은 논쟁)</td></tr>
+<tr><td rowspan="2">보강<br><span class="small">옛 "유지 후보". 테마 밖이지만 평균 IC를 올려 다시 넣은 것</span></td><td>고유변동성</td><td>최근 24개월(최소 12) 시장모형 잔차의 표준편차</td><td>− (변덕스러운 주식이 낮음)</td></tr>
+<tr><td>주식 발행</td><td>ln(t월 주식 수 ÷ 12개월 전 주식 수)</td><td>− (주식을 많이 찍으면 낮음)</td></tr>
+<tr><td rowspan="2">수급</td><td>개인 순매수 (H1)</td><td>t월 개인 순매수 금액 ÷ <b>t−1월 말</b> 시총</td><td>− (H1)</td></tr>
+<tr><td>외국인 순매수 (H2)</td><td>t월 외국인 순매수 금액 ÷ <b>t−1월 말</b> 시총</td><td>+ (H2)</td></tr>
+<tr><td>정답</td><td>target</td><td>t+1월 수익률. 같은 종목의 <b>바로 다음 달</b> 줄에서만 가져옴</td><td></td></tr>
+</table>
+<p>모델에 넣을 때는 매달 순위(0~1)로 바꾸고, 빈칸은 0.5(중간) + 결측 표시 열(빈칸이면 1)로 채운다. 결측을 0으로 채우지 않는 이유: 0은 "가장 작은 값"이라는 다른 뜻이 되기 때문이다.</p>
+
+<h2>5. 학습 방식 — 매년 쌓는 누적 학습</h2>
+<p>모의고사 비유: 2001~2010년 기출문제로 공부해서 2011년 모의고사를 친다. 채점 후, 2011년까지 포함해 다시 공부하고 2012년을 친다. 이렇게 2021년까지 11번 반복한다.</p>
+<div class="tl"><div style="flex:1;background:#999">2000 warmup</div><div style="flex:10;background:#4c72b0">학습 2001~2010</div><div style="flex:1;background:#55a868">2011 예측</div><div style="flex:10;background:#fff"></div></div>
+<div class="tl"><div style="flex:1;background:#999">2000</div><div style="flex:11;background:#4c72b0">학습 2001~2011</div><div style="flex:1;background:#55a868">2012</div><div style="flex:9;background:#fff"></div></div>
+<div class="tl"><div style="flex:1;background:#999">2000</div><div style="flex:20;background:#4c72b0">학습 2001~2020 … (매년 1년씩 늘어남)</div><div style="flex:1;background:#55a868">2021</div></div>
+<ul>
+<li><b>학습에 쓰는 줄:</b> Y년을 예측할 때는 2001-01 ~ (Y−1)년 11월 줄까지만. 11월 줄의 정답은 12월 수익률이라 Y년 1월 초에 이미 알 수 있다. 12월 줄의 정답(Y년 1월 수익률)은 아직 모르므로 쓰지 않는다.</li>
+<li><b>재학습:</b> 1년에 한 번(1월). 그 공식 하나로 그해 12개월을 모두 예측.</li>
+<li><b>XGBoost 설정은 고정:</b> 나무 300그루, 깊이 4, 학습률 0.05, 표본 80%, 시드 42(config.yaml 값). 결과를 보고 튜닝하지 않는다(과적합 방지).</li>
+<li><b>정답의 형태:</b> 다음 달 수익률 자체가 아니라 그달 안의 순위. +1,600% 같은 극단값에 모델이 끌려가지 않게 하고, 평가(IC)도 순위로 하기 때문.</li>
+<li><b>test(2022~2025)</b>는 11/25에 설정을 고정한 뒤 딱 한 번만 쓴다(같은 방식으로 매년 쌓는 것은 교수님이 허용).</li>
+</ul>
+
+<h2 class="pb">6. 첫 단계: 방향 미리 보기 (학습 없음)</h2>
+<p>모델을 돌리기 전에 변수를 <b>하나씩</b> 5분위로 나눠 다음 달 수익률을 본다. 판정용이 아니라 "데이터가 대략 어느 쪽을 가리키나"를 눈으로 보는 단계다.</p>
+<figure><img src="../out/figA_quintiles.png" style="max-height:150mm"><figcaption>그림 A. 변수 5분위별 다음 달 평균 수익률(2011~2021)</figcaption></figure>
+<div class="read"><b class="t">그림 A 읽는 법</b> — 각 칸은 변수 하나. 가로축 1(그 변수가 가장 낮은 20%) → 5(가장 높은 20%), 세로축은 그 종목들의 <b>다음 달</b> 평균 수익률. 빨간 막대 두 개(1과 5)의 차이가 제목의 Q5−Q1이다. 계단이 오른쪽으로 올라가면 +, 내려가면 − 방향.<br>
+<b>눈에 띄는 것:</b> <b>규모</b>는 1분위(가장 작은 회사)가 2.45%로 튀고 나머지는 계단식 하락(Q5−Q1 −2.10%p, t −5.9). <b>가치</b>는 깔끔한 오르막(+0.86%p). <b>개인 순매수</b>도 오르막(+0.70%p, t +3.1) — <b>H1 예상(내리막)과 반대</b>. <b>외국인 순매수</b>는 가운데가 높고 5분위가 낮은 산 모양(−0.30%p, t −1.5). <b>베타·고유변동성</b>은 1~4분위는 비슷하다가 5분위만 뚝 떨어지는 "꼬리 모양" — 가장 위험한 20%만 나쁘다.</div>
+<table>
+<tr><th>변수</th><th>예상</th><th class="n">원시 IC 2011~21 (t)</th><th class="n">Q5−Q1 %p (t)</th><th>한 줄 해석</th></tr>
+<tr><td>베타</td><td>+</td><td class="n">−0.030 (−2.6)</td><td class="n">−0.47 (−1.4)</td><td>예상과 반대. 저베타 이상현상(Frazzini &amp; Pedersen 2014)</td></tr>
+<tr><td>규모</td><td>−</td><td class="n">−0.018 (−1.6)</td><td class="n">−2.10 (−5.9)</td><td>방향은 맞지만 극소형 1분위가 대부분</td></tr>
+<tr><td>가치</td><td>+</td><td class="n">+0.054 (+4.9)</td><td class="n">+0.86 (+2.4)</td><td>가장 깔끔한 단일 신호</td></tr>
+<tr><td>단기 반전</td><td>−</td><td class="n">−0.036 (−3.5)</td><td class="n">−0.34 (−1.0)</td><td>순위로는 꾸준, 평균 차이는 작음</td></tr>
+<tr><td>모멘텀</td><td>±</td><td class="n">+0.007 (+0.6)</td><td class="n">+0.24 (+0.6)</td><td>최근 한국에선 거의 없음</td></tr>
+<tr><td>고유변동성</td><td>−</td><td class="n">−0.076 (−6.2)</td><td class="n">−0.31 (−0.8)</td><td><b>순위 신호는 가장 강함</b>(IC 기준 1등)</td></tr>
+<tr><td>주식 발행</td><td>−</td><td class="n">−0.035 (−6.4)</td><td class="n">−0.29 (−1.3)</td><td>방향은 맞음</td></tr>
+<tr><td>개인 순매수</td><td>−</td><td class="n">+0.018 (+2.7)</td><td class="n">+0.70 (+3.1)</td><td><b>H1과 반대</b></td></tr>
+<tr><td>외국인 순매수</td><td>+</td><td class="n">−0.009 (−1.6)</td><td class="n">−0.30 (−1.5)</td><td>H2 방향 아님, 유의하지 않음</td></tr>
+</table>
+<figure><img src="../out/figB_cum_raw_ic.png"><figcaption>그림 B. 변수 하나씩 본 원시 IC 누적합</figcaption></figure>
+<div class="read"><b class="t">그림 B 읽는 법</b> — 매달 IC를 계속 더해 간 선. <b>꾸준히 한쪽으로 기울면 매달 같은 방향이 반복된다는 뜻</b>(우연이 아님). 선이 오르락내리락하며 0 근처면 신호가 없다. 고유변동성(아래로 가장 가파름)·가치(위로)·주식 발행·단기 반전(아래로)은 꾸준하다. 모멘텀과 외국인 순매수는 0 근처를 맴돈다. 개인 순매수는 완만하게 위로 올라간다.</div>
+<div class="box warn">이 단계의 숫자는 <b>판정에 쓰지 않는다</b>. 변수 하나만 봤기 때문에 서로 겹치는 정보(예: 규모와 가치)를 구분하지 못한다. 판정은 7절(XGBoost)과 8절(Fama-MacBeth)에서 한다.</div>
+
+<h2 class="pb">7. 쓸모 판정: XGBoost 누적 학습 단계별 IC</h2>
+<p>변수를 묶음 단위로 하나씩 더하면서 매번 5절의 누적 학습을 처음부터 다시 돌린다. 각 단계의 131개월 IC를 직전 단계와 비교한다.</p>
+<figure><img src="../out/figC_stage_ic.png"><figcaption>그림 C. 묶음 단계별 평균 IC</figcaption></figure>
+<div class="read"><b class="t">그림 C 읽는 법</b> — 막대 높이 = 그 단계까지 넣은 모델의 평균 IC. 막대 위 숫자는 위에서부터 평균 IC, (t), 직전 단계 대비 증가분, 이긴 해 수, 판정. 초록 = 규칙 통과, 파랑 = 출발점.<br>
+기준선만으로 0.051. 통제를 더하면 0.077로 <b>가장 크게</b> 오른다(+0.026, 11년 중 9년). 보강 +0.011(9년), 수급 +0.004(9년). 오르는 폭이 점점 줄어드는 것은 자연스럽다(쉬운 정보부터 먼저 들어가기 때문).</div>
+<table>
+<tr><th>단계</th><th class="n">평균 IC</th><th class="n">t</th><th class="n">IC&gt;0인 달</th><th class="n">증가분 (t)</th><th class="n">이긴 해</th><th>판정</th></tr>
+<tr><td>0 기준선</td><td class="n">0.0511</td><td class="n">6.2</td><td class="n">70%</td><td class="n">—</td><td class="n">—</td><td>출발점</td></tr>
+<tr><td>1 + 통제</td><td class="n">0.0769</td><td class="n">9.7</td><td class="n">81%</td><td class="n">+0.0258 (5.5)</td><td class="n">9/11</td><td class="ok">OK</td></tr>
+<tr><td>2 + 보강</td><td class="n">0.0878</td><td class="n">9.5</td><td class="n">83%</td><td class="n">+0.0108 (3.6)</td><td class="n">9/11</td><td class="ok">OK</td></tr>
+<tr><td>3 + 수급</td><td class="n">0.0920</td><td class="n">10.3</td><td class="n">85%</td><td class="n">+0.0043 (2.7)</td><td class="n">9/11</td><td class="ok">OK</td></tr>
+<tr><td>3a 보강 + 개인만</td><td class="n">0.0925</td><td class="n">10.5</td><td class="n">85%</td><td class="n">+0.0047 (3.3)</td><td class="n">11/11</td><td class="ok">OK</td></tr>
+<tr><td>3b 보강 + 외국인만</td><td class="n">0.0895</td><td class="n">9.6</td><td class="n">82%</td><td class="n">+0.0017 (1.2)</td><td class="n">7/11</td><td class="mid">OK(약함)</td></tr>
+<tr><td>누수 점검(정답 섞기)</td><td class="n">−0.0013</td><td class="n">−0.3</td><td class="n">47%</td><td colspan="3">0 근처 → 미래 정보 누수 없음</td></tr>
+</table>
+<p class="small">3a·3b는 수급 묶음 안에서 누가 기여했는지 보려고 하나씩 넣어 본 것. 개인이 혼자 11년 모두 이겼고, 외국인은 혼자서는 증가분 t 1.2로 약하다(규칙상 OK지만 근거가 얇음).</p>
+
+<figure><img src="../out/figD_seq_ic.png"><figcaption>그림 D. 변수를 한 개씩 쌓을 때 평균 IC</figcaption></figure>
+<div class="read"><b class="t">그림 D 읽는 법</b> — 그림 C를 변수 하나 단위로 쪼갠 것. 빨간 막대는 규칙 탈락.<br>
+<b>베타</b>만으로 0.028 → <b>+규모</b>에서 오히려 0.023으로 <b>떨어짐</b>(NO) → <b>+가치</b>에서 0.051로 크게 오름 → <b>+모멘텀</b> 0.062 → <b>+단기 반전</b> 0.077 → <b>+고유변동성</b> 0.088(11년 모두 이김) → <b>+주식 발행</b> 0.0878로 <b>변화 없음</b>(NO).</div>
+<div class="box"><b>규모는 왜 NO인데 남나?</b> 규칙상 기준선은 판정 면제다(교과서 위험 요인이라 빼면 "규모 효과를 수급 효과로 착각"할 수 있음). 게다가 다른 변수와 함께 넣은 Fama-MacBeth에서는 규모가 9개 변수 중 가장 강하다(t −6.1, 8절). 베타 바로 뒤에 혼자 들어갈 때는 순위 관계가 약해 손해였지만, 가치(규모와 상관 −0.31)와 함께 있을 때 제 역할을 한다.<br>
+<b>주식 발행은 왜 NO인가?</b> 11년 중 6년은 이겼지만(규칙 ②는 통과) 평균 IC 증가분이 −0.0000(규칙 ① 실패). 고유변동성과 순위상관 0.21로 겹쳐서, 고유변동성이 이미 들어간 뒤에는 새로 알려 주는 것이 없다. 방향 자체는 맞다(2002~2021 Fama-MacBeth t −3.2).</div>
+
+<figure><img src="../out/figC2_stage_ic_by_year.png"><figcaption>그림 C2. 단계별 연도별 평균 IC</figcaption></figure>
+<div class="read"><b class="t">그림 C2 읽는 법</b> — 점 하나 = 그해 12개월 평균 IC. 한 해에서 위쪽 선이 아래쪽 선보다 높으면 그 단계가 "이긴 해". 회색(기준선) 위로 파랑(통제)이 2011~2013, 2016, 2018~2021에 확실히 올라간다. 주황(보강)과 초록(수급)은 파랑 위에 겹쳐 조금씩 높다. <b>2014·2015·2020년은 통제 이후 세 선이 0.05~0.06에 몰려 있다</b> — 이 해들은 변수를 더 넣어도 나아지지 않았다. 특히 2020년은 기준선까지 네 선이 모두 0.05 근처로 겹친다(코로나 급락·급반등).</div>
+<figure><img src="../out/figC3_stage_cum_ic.png"><figcaption>그림 C3. 단계별 누적 IC와 누수 점검</figcaption></figure>
+<div class="read"><b class="t">그림 C3 읽는 법</b> — 단계별 월 IC를 누적한 선. 네 선 모두 거의 직선으로 오른다 = 특정 몇 달이 아니라 <b>11년 내내 꾸준히</b> 맞혔다는 뜻. 선 사이 간격이 각 단계의 기여. <b>검은 점선</b>은 정답을 매달 무작위로 섞은 뒤 학습한 모델이다. 정답과 무관하게 학습했는데도 IC가 나온다면 코드 어딘가에서 미래 정보가 새고 있다는 뜻인데, 점선은 0 근처(−0.001)에 머문다 → <b>누수 없음</b>.</div>
+<div class="box warn"><b>주의: 예측력은 중소형주에서 나온다.</b> 같은 예측을 그달 시총 순위별로 나눠 평가하면 — 3단계 기준 전체 0.092, 시총 상위 100 <b>0.023</b>, 상위 200 0.038, 200위 밖 0.114. 대형주끼리는 순위를 맞히기 훨씬 어렵다. 보고서에는 전체 IC와 대형주 IC를 함께 적는다.</div>
+
+<h2 class="pb">8. 방향 판정: H1·H2와 Fama-MacBeth</h2>
+<figure><img src="../out/figE_nb_timeseries.png"><figcaption>그림 E. 개인·외국인 순매수 비율의 월별 흐름</figcaption></figure>
+<div class="read"><b class="t">그림 E 읽는 법</b> — 위: 매달 종목들의 순매수 비율 중앙값(%, 3개월 평균). 아래: 그달 순매수(+)였던 종목의 비율.<br>
+<b>두 선이 거울처럼 움직인다</b>: 개인이 사는 달에 외국인은 판다(같은 달 두 변수의 순위상관 −0.47). 2005년 이전 외국인 선이 0에 붙어 있는 것은 3절 #12(외국인 무거래 소형주). 2020~2021년 개인 순매수가 급증한 구간이 "동학개미"다. 아래 그림에서 개인은 대부분 기간 50% 근처 이상, 외국인은 2000년대 초 30%대 → 대부분 종목에서 외국인은 순매도였다.</div>
+<figure><img src="../out/figF_h1h2_quintiles.png"><figcaption>그림 F. H1·H2 수급 표(2011~2021)</figcaption></figure>
+<div class="read"><b class="t">그림 F 읽는 법</b> — 위 줄 개인, 아래 줄 외국인. 왼쪽부터 전체 / 시총 상위 50%(대형) / 하위 50%(소형). 가로축 1 = 그달 가장 많이 판 20%, 5 = 가장 많이 산 20%.<br>
+<b>개인</b>: 세 칸 모두 오르막. 전체 Q5−Q1 +0.70%p(t +3.1), 소형 +0.67%p(t +2.3), 대형 +0.36%p(t +1.4, 유의하지 않음). H1은 "많이 산 쪽이 낮다"(내리막)였으므로 <b>반대</b>.<br>
+<b>외국인</b>: 5분위(많이 산 쪽)가 오히려 낮다. 하지만 t가 −0.8 ~ −1.6으로 2에 못 미쳐 <b>확인하지 못함</b>.</div>
+<table>
+<tr><th>가설</th><th>그룹</th><th class="n">Q1 많이 팖</th><th class="n">Q5 많이 삼</th><th class="n">Q5−Q1 %p</th><th class="n">t</th><th>판정</th></tr>
+<tr><td rowspan="3">H1 개인</td><td>전체</td><td class="n">0.58</td><td class="n">1.28</td><td class="n">+0.70</td><td class="n">+3.1</td><td class="no">반대 방향으로 유의</td></tr>
+<tr><td>대형</td><td class="n">0.32</td><td class="n">0.69</td><td class="n">+0.36</td><td class="n">+1.4</td><td>확인하지 못함</td></tr>
+<tr><td>소형</td><td class="n">1.17</td><td class="n">1.84</td><td class="n">+0.67</td><td class="n">+2.3</td><td class="no">반대 방향으로 유의</td></tr>
+<tr><td rowspan="3">H2 외국인</td><td>전체</td><td class="n">1.02</td><td class="n">0.72</td><td class="n">−0.30</td><td class="n">−1.5</td><td>확인하지 못함</td></tr>
+<tr><td>대형</td><td class="n">0.66</td><td class="n">0.29</td><td class="n">−0.37</td><td class="n">−1.6</td><td>확인하지 못함</td></tr>
+<tr><td>소형</td><td class="n">1.62</td><td class="n">1.38</td><td class="n">−0.24</td><td class="n">−0.8</td><td>확인하지 못함</td></tr>
+</table>
+<figure><img src="../out/figG_fama_macbeth.png"><figcaption>그림 G. Fama-MacBeth 방향 확인(9개 변수 동시, 2011~2021)</figcaption></figure>
+<div class="read"><b class="t">그림 G 읽는 법</b> — 막대 길이 = t값. 점선(±2)을 넘으면 "어느 정도", 파선(±3)을 넘으면 "확실". 색: 초록 = 가설 방향 지지, 빨강 = 반대 방향으로 유의, 회색 = 확인 못함. 옆 글씨의 "계수"는 <b>다른 8개 변수가 같을 때</b> 그 변수가 그달 꼴찌 → 1등으로 가면 다음 달 수익률이 몇 %p 달라지는지.<br>
+<b>규모</b>만 초록(−2.56%p, t −6.1). <b>개인 순매수는 빨강</b>(+0.76%p, t +3.1): 단기 반전·모멘텀·규모·가치·변동성을 모두 같이 넣어도 남는다. 외국인은 회색(t −1.2).</div>
+<table>
+<tr><th>변수</th><th>예상</th><th class="n">2011~21 계수 %p (t)</th><th>판정(검증 구간)</th><th class="n">2002~21 계수 (t)</th></tr>
+<tr><td>베타</td><td>+</td><td class="n">−0.24 (−0.8)</td><td>확인하지 못함</td><td class="n">+0.35 (+1.3)</td></tr>
+<tr><td>규모</td><td>−</td><td class="n">−2.56 (−6.1)</td><td class="ok">확실하게 지지</td><td class="n">−2.05 (−5.2)</td></tr>
+<tr><td>가치</td><td>+</td><td class="n">+0.14 (+0.4)</td><td>확인하지 못함</td><td class="n">+0.78 (+2.5)</td></tr>
+<tr><td>단기 반전</td><td>−</td><td class="n">−0.15 (−0.4)</td><td>확인하지 못함</td><td class="n">−0.61 (−2.0)</td></tr>
+<tr><td>모멘텀</td><td>±</td><td class="n">+1.01 (+2.5)</td><td>통제(방향 가설 없음)</td><td class="n">+1.51 (+4.6)</td></tr>
+<tr><td>고유변동성</td><td>−</td><td class="n">−0.74 (−2.0)</td><td>확인하지 못함(t −1.99)</td><td class="n">−1.46 (−5.0)</td></tr>
+<tr><td>주식 발행</td><td>−</td><td class="n">−0.52 (−1.8)</td><td>확인하지 못함</td><td class="n">−0.77 (−3.2)</td></tr>
+<tr><td><b>개인 순매수 H1</b></td><td>−</td><td class="n"><b>+0.76 (+3.1)</b></td><td class="no">반대 방향으로 유의</td><td class="n">+0.54 (+2.8)</td></tr>
+<tr><td><b>외국인 순매수 H2</b></td><td>+</td><td class="n">−0.23 (−1.2)</td><td>확인하지 못함</td><td class="n">−0.40 (−2.7) 반대</td></tr>
+</table>
+<p class="small">9개를 한꺼번에 넣으면 서로 겹치는 변수(가치·고유변동성·규모)는 t가 나뉘어 작아진다. 그래서 가치·단기 반전은 검증 구간에서 "확인 못함"이지만, XGBoost에서는 분명히 쓸모가 있었다(7절). 이것도 "쓸모와 방향은 따로"의 예다.</p>
+<figure><img src="../out/figH_corr.png" style="max-height:95mm"><figcaption>그림 H. 변수끼리의 겹침</figcaption></figure>
+<div class="read"><b class="t">그림 H 읽는 법</b> — 칸 숫자 = 두 변수의 월별 순위상관 평균. 빨강은 같이 움직임, 파랑은 반대로 움직임. <b>개인 순매수 ↔ 외국인 순매수 −0.47</b>(서로 반대편에서 거래), <b>개인 순매수 ↔ 단기 반전 −0.29</b>(개인은 그달 <b>떨어진</b> 종목을 산다), 가치 ↔ 고유변동성 −0.35, 가치 ↔ 규모 −0.31. 이 겹침 때문에 하나씩 볼 때와 같이 볼 때 결과가 달라진다.</div>
+
+<h3>H1 결과가 데이터 문제 때문일까? — 6가지로 흔들어 봤다</h3>
+<table>
+<tr><th>점검 (Fama-MacBeth 9개 변수, 2011~2021)</th><th class="n">개인 계수 (t)</th><th class="n">외국인 계수 (t)</th></tr>
+<tr><td>기본</td><td class="n">+0.76 (3.1)</td><td class="n">−0.23 (−1.2)</td></tr>
+<tr><td>정답의 극단값을 매달 상하위 1%에서 자름(#5)</td><td class="n">+0.60 (2.8)</td><td class="n">−0.20 (−1.1)</td></tr>
+<tr><td>퇴장 종목의 사라진 다음 달 수익률을 −30%로 채움(#4)</td><td class="n">+0.82 (3.3)</td><td class="n">−0.19 (−1.0)</td></tr>
+<tr><td>같은 것을 −100%(완전 손실)로 채움(#4)</td><td class="n">+0.96 (3.4)</td><td class="n">−0.12 (−0.6)</td></tr>
+<tr><td>순매수 비율이 ±20% 넘는 칸 제외(#13)</td><td class="n">+0.78 (3.2)</td><td class="n">−0.22 (−1.2)</td></tr>
+<tr><td>t월 수익률이 정확히 0인 칸(거래정지 의심) 제외(#6)</td><td class="n">+0.79 (3.2)</td><td class="n">−0.22 (−1.2)</td></tr>
+<tr><td>연도별 Q5−Q1 부호</td><td class="n">11년 중 10년 +</td><td class="n">11년 중 8년 −</td></tr>
+</table>
+<div class="box key"><b>결론:</b> H1의 "반대 방향"은 극단값, 상장폐지, 거래정지, 몇몇 튀는 칸 때문이 아니다. 어떻게 흔들어도 t 2.8~3.4, 11년 중 10년 같은 방향. <b>데이터가 말하는 결과다.</b></div>
+<div class="box"><b>왜 이렇게 나왔을까? (해석 후보, 아직 결론 아님)</b><br>
+① <b>유동성 공급</b>(계획서에 적어 둔 H1의 반대 가능성): 외국인·기관이 급하게 팔 때 개인이 받아 주고, 그 대가로 다음 달 보상을 받는다. 개인 ↔ 외국인 −0.47, 개인 ↔ 그달 수익률 −0.29(떨어진 걸 산다)와 맞는 그림. 해외 연구(Kaniel, Saar &amp; Titman 2008, NYSE)에서도 개인 순매수 다음 달 초과수익이 +로 나온 적이 있다.<br>
+② <b>단순 반전의 잔여물</b>: 개인이 떨어진 종목을 사고 그 종목이 반등하는 것일 수 있다. 하지만 단기 반전을 같이 넣은 Fama-MacBeth에서도 남으므로 이것만으로는 설명이 안 된다.<br>
+③ <b>월 단위의 한계</b>: 기존 한국 연구는 주로 일·주 단위였다. 월 단위로 모으면 단기 "주목 매수" 손실보다 유동성 공급 보상이 크게 보일 수 있다.</div>
+
+<h2 class="pb">9. 최종: 어떤 변수가 왜 남았나</h2>
+<table>
+<tr><th style="width:15%">변수</th><th style="width:13%">쓸모 (XGBoost)</th><th style="width:16%">방향 (FM 2011~21)</th><th style="width:10%">결정</th><th>이유</th></tr>
+<tr><td>베타</td><td>출발점 0.028</td><td>확인 못함(예상과 반대 부호)</td><td class="ok">남김</td><td>기준선(판정 면제). 단독으로는 저베타 이상현상(−).</td></tr>
+<tr><td>규모</td><td class="no">NO (−0.005, 5/11)</td><td class="ok">확실 지지 (t −6.1)</td><td class="ok">남김</td><td>기준선(판정 면제). 혼자서는 손해지만 가치와 함께일 때 가장 강한 방향 신호. 빼면 소형주 효과가 수급으로 섞일 위험.</td></tr>
+<tr><td>가치</td><td class="ok">+0.028, 9/11</td><td>확인 못함 (전체 기간은 지지 t 2.5)</td><td class="ok">남김</td><td>기준선. 하나씩 쌓기에서 가장 큰 상승.</td></tr>
+<tr><td>모멘텀</td><td class="ok">+0.011, 7/11</td><td>통제(방향 가설 없음)</td><td class="ok">남김</td><td>통제 규칙 통과.</td></tr>
+<tr><td>단기 반전</td><td class="ok">+0.015, 10/11</td><td>확인 못함</td><td class="ok">남김</td><td>통제 규칙 통과. 개인 순매수와 겹치므로(−0.29) 반드시 함께 둬야 H1을 공정하게 판정.</td></tr>
+<tr><td>고유변동성</td><td class="ok">+0.011, 11/11</td><td>확인 못함(t −1.99), 전체 기간은 확실 지지</td><td class="ok">남김</td><td>보강 묶음의 실제 기여자. 근거 논문 필요(Ang et al. 2006).</td></tr>
+<tr><td>주식 발행</td><td class="no">NO (−0.0000, 6/11)</td><td>확인 못함, 전체 기간은 지지</td><td class="mid">탈락 제안</td><td>방향은 맞지만 고유변동성 다음에 넣으면 새 정보가 없음. 묶음 판정은 OK였으므로 <b>팀이 결정</b>.</td></tr>
+<tr><td>개인 순매수</td><td class="ok">+0.0047, 11/11</td><td class="no">반대 방향 유의 (t +3.1)</td><td class="ok">남김</td><td>쓸모는 가장 꾸준(11년 전부). <b>H1은 지지되지 않음, 반대 방향</b>.</td></tr>
+<tr><td>외국인 순매수</td><td class="mid">+0.0017, 7/11 (약함)</td><td>확인 못함</td><td class="ok">남김(약함)</td><td>규칙상 OK. 증가분 t 1.2로 근거 약함. <b>H2 확인 못함</b>.</td></tr>
+</table>
+<div class="box"><b>"보강" 이름 제안:</b> "설명력 보강 변수". 테마(수급·뉴스)에는 직접 필요 없지만, 넣으면 평균 IC를 올리고(+0.011, 9/11) 교수님도 "근거 논문과 함께 넣어도 됨"이라고 하신 변수라서.</div>
+
+<h2>10. 한계와 우리 질문 (11/16 교수님께)</h2>
+<ol>
+<li><b>H1 반대 결과의 해석</b>: 단기 반전을 통제해도 남는 개인 순매수 + 효과를 "유동성 공급 보상"으로 해석해도 되는가? 추가로 확인해야 할 것(예: 기관 순매수, 일 단위)은?</li>
+<li><b>XGBoost 증가분 t</b>(예: 수급 +0.0043, t 2.7)를 보조 근거로 보고서에 써도 되는가?</li>
+<li><b>주식 발행</b>: 묶음 판정은 OK, 단독은 NO. 보강을 고유변동성만으로 줄여도 되는가?</li>
+<li><b>대형주 IC 0.023</b>: 보고서에 전체·대형 IC를 함께 내면 충분한가?</li>
+<li><b>데이터</b>: 2008-08~11 PBR 누락, +100% 수익률 460건의 원인(예원님 확인 요청). 2002~05년 PBR = 0이 49~64%인 이유.</li>
+</ol>
+<p class="small">한계: 고유변동성은 월 데이터 24개월 시장모형으로 만들었다(일 데이터가 아님). 시장수익률은 데이터 종목의 시총 가중 평균. Fama-MacBeth t는 일반 t(Newey-West 3개월 보정 t도 거의 같음: 개인 +3.18, 외국인 −1.15).</p>
+
+<h2 class="pb">11. 다음: 뉴스가 오면 H3·H4는 어떻게 쌓나</h2>
+<p><b>네, 그대로 이어서 쌓을 수 있다.</b> 코드가 단계 목록에 변수를 더하는 구조라서, 뉴스 변수만 만들어지면 같은 규칙과 같은 학습 방식으로 바로 돌아간다.</p>
+<table>
+<tr><th style="width:18%">가설</th><th>추가할 것</th><th>판정</th></tr>
+<tr><td>H3 화제 논조</td><td>4단계 "+뉴스": <code>topic_tone</code>(화제형 기사 KR-FinBert-SC P(긍정)−P(부정) 월평균) + <code>no_news</code>(그달 화제 기사 없음 = 1). 기사가 없으면 논조는 0.5(중간) + 표시 1.</td><td>쓸모: 3단계 대비 평균 IC↑ & 6/11년. 방향: FM에서 <code>topic_tone</code> 계수 + 이고 t ≥ 2.</td></tr>
+<tr><td>H4 설거지 표</td><td>모델 밖 비교표. 호재 종목(화제 기사 있고 논조가 그달 중간값보다 높음) 안에서 개인 많음 vs 적음의 다음 달 수익률 차이 − 기사 없는 종목에서의 같은 차이.</td><td>차이의 차이가 − 이고 t ≤ −2 → 지지.</td></tr>
+</table>
+<div class="box warn"><b>오늘 결과가 H4에 주는 의미:</b> 기사가 없는 종목에서도 "개인 많음 − 적음"이 이미 + 쪽일 가능성이 크다(H1 결과). 그래서 H4는 반드시 <b>기사 없는 종목과의 차이(차이의 차이)</b>로 봐야 한다. 호재 종목에서만 + 폭이 작아지거나 −로 뒤집히면, 그게 "호재에 개인이 몰리면 더 약하다"의 증거가 된다. 비교군을 미리 넣어 둔 설계가 여기서 빛을 본다.</div>
+
+<h2>부록. 재현 방법</h2>
+<table>
+<tr><th>순서</th><th>파일 (<code>연습장/</code>)</th><th>하는 일 → 결과</th></tr>
+<tr><td>1</td><td>step1_features.py &lt;데이터폴더&gt;</td><td>변수·정답 만들기 → out/features.parquet, coverage_by_year.csv</td></tr>
+<tr><td>2</td><td>step2_preview.py</td><td>방향 미리 보기 → 그림 A·B, preview_*.csv</td></tr>
+<tr><td>3</td><td>step3_xgb_stages.py</td><td>XGBoost 누적 학습 단계별 IC(약 8분, CPU) → stage_ic*.csv</td></tr>
+<tr><td>4</td><td>step4_fm_h1h2.py</td><td>Fama-MacBeth, 수급 표 → 그림 E·F·G</td></tr>
+<tr><td>5</td><td>step5_plots.py · step6_bigcap.py</td><td>그림 C·C2·C3·D, 규모별 IC</td></tr>
+<tr><td>6</td><td>step7_datamap.py · step8_corr.py</td><td>그림 0·H</td></tr>
+</table>
+<p class="small">패키지: xgboost 3.2.0(팀 requirements와 같음), pandas, numpy, matplotlib, koreanize-matplotlib. 입력 데이터는 Git에 올리지 않는다(팀 규칙). 2022년 이후 행은 step1에서 읽자마자 버린다.</p>
+</body></html>
