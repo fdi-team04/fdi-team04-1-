@@ -83,7 +83,6 @@ def load_name_dict(path="data/processed/company_list.csv"):
              r[clast] if pd.notna(r[clast]) else None))
     return nd
 
-
 def clean_news(df, name_dict):
     """[H8] 분석제외·중복 제거와 제목 기준 종목 매칭 (+, 대립 −)
 
@@ -160,6 +159,7 @@ def clean_news(df, name_dict):
             if len(rows):
                 out.append(hit.loc[rows].assign(code=code))
     print(f"[clean_news] 같은 이름이 두 종목에 겹쳐 뺀 기사: {n_ambiguous}건")
+
     cols = ["code", "date", "title", "body"]
     if not out:
         return pd.DataFrame(columns=cols)
@@ -178,7 +178,7 @@ def assign_month(df, trading_days):
     """
     td = pd.to_datetime(pd.Series(list(trading_days)))
     last_td = td.groupby(td.dt.to_period("M")).max()  # 월별 마지막 거래일
-
+    
     d = df.copy()
     d["date"] = pd.to_datetime(d["date"])
     per = d["date"].dt.to_period("M")
