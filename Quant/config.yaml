@@ -2,7 +2,10 @@
 periods:
   warmup: ["2000-01", "2000-12"]
   train:  ["2001-01", "2021-12"]
+  valid:  ["2011-01", "2021-12"]   # train 안에서 IC를 계산하는 구간
   test:   ["2022-01", "2025-12"]
-data_dir: /data        # gdown으로 받은 위치
+data_dir: /content/data            # docker-compose에서 연결한 경로
 seed: 42
 text_model: snunlp/KR-FinBert-SC
+xgb: {n_estimators: 300, max_depth: 4, learning_rate: 0.05, subsample: 0.8}
+test_refit: yearly                 # 교수님 답변 후 확정
