@@ -49,7 +49,9 @@ PERIODS = [(2001, 2005), (2006, 2010), (2011, 2015), (2016, 2021)]
 
 def draw_100(x, per_period=25, max_per_company=3, seed=42, exclude_ids=()):
     """기간별 25건, 회사당 최대 3건, 시드 고정. exclude_ids = 지난 시험에 쓴 기사 id"""
-    pool = x[~x.id.isin(set(exclude_ids)) & x.year.notna()].sample(frac=1, random_state=seed)
+    pool = x[~x.id.isin(set(exclude_ids)) & x.year.notna()]
+    pool = pool.drop_duplicates(["title", "date"])   # 같은 기사가 여러 회사에 붙은 경우 하나만
+    pool = pool.sample(frac=1, random_state=seed)
     picked, cnt = [], {}
     for a, b in PERIODS:
         p = pool[(pool.year >= a) & (pool.year <= b)]
