@@ -22,6 +22,8 @@ def load_clean(path):
         x["id"] = [f"r{i}" for i in range(len(x))]
     x["code"] = x.code.str.replace(r"\.0$", "", regex=True).str.zfill(6)
     x["date"] = pd.to_datetime(x.date.str[:10].str.replace(r"^(\d{4})(\d{2})(\d{2})$", r"\1-\2-\3", regex=True), errors="coerce")
+    if x.date.isna().all() and "month" in d.columns:      # 날짜 칸이 없으면 month(YYYY-MM)로
+        x["date"] = pd.to_datetime(d["month"].str[:7] + "-15", errors="coerce")
     x["year"] = x.date.dt.year
     missing = [k for k in ["code", "date", "title"] if (out[k] == "").all()]
     print(f"읽은 줄 {len(x):,} | 칸 연결: " + ", ".join(f"{k}←{next((c for c in CAND[k] if c in d.columns), '없음')}" for k in CAND))
