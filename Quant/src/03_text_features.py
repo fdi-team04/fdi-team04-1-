@@ -91,9 +91,9 @@ def score_articles(articles: pd.DataFrame, backend: str = "finbert") -> pd.DataF
           결과는 article_scores.parquet에 캐시해 재사용한다(원문 열은 저장하지 않음).
           입력 CSV나 backend를 바꾸면 캐시 파일을 지우고 다시 돌린다.
     """
-    if backend == "finbert":
+    if backend != "finbert":
         raise NotImplementedError("LLM(Upstage) 백엔드는 나중에 추가")
-    cache = f"{PROC}/article_scores.parquet" # 캐시가 있으면 재계산하지 않고 바로 읽음
+    cache = f"{PROC}/article_scores.parquet"  # 캐시가 있으면 재계산하지 않고 바로 읽음
     if os.path.exists(cache):
         return pd.read_parquet(cache)
 
@@ -103,9 +103,10 @@ def score_articles(articles: pd.DataFrame, backend: str = "finbert") -> pd.DataF
     p = finbert_probs(uniq)
     s = (p["positive"] - p["negative"]).set_axis(uniq)
 
-out = articles.drop(columns= ["title", "body"]).assign(s=text.map(s))
-out.to_parquet(cache, index=False)
-return out
+    out = articles.drop(columns=["title", "body"]).assign(s=text.map(s))
+    out.to_parquet(cache, index=False)
+    return out
+
 
 def aggregate_monthly(scored: pd.DataFrame) -> pd.DataFrame:
     """[H8] 종목·월 감성 지수 (+, 대립 −)
