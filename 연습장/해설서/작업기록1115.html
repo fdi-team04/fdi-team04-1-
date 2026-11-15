@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>4팀 11/15 작업 기록</title>
+<style>
+@font-face{font-family:NG;src:url("file:///usr/local/lib/python3.13/dist-packages/koreanize_matplotlib/fonts/NanumGothic.ttf");}
+@font-face{font-family:NG;font-weight:bold;src:url("file:///usr/local/lib/python3.13/dist-packages/koreanize_matplotlib/fonts/NanumGothicBold.ttf");}
+body{font-family:NG,sans-serif;font-size:10.2pt;line-height:1.65;color:#1E2422;}
+h1{font-size:19pt;margin:0 0 2mm;}
+h2{font-size:13.5pt;border-bottom:2.5px solid #1F5C5A;padding-bottom:1.5mm;margin:8mm 0 3mm;page-break-after:avoid;}
+h3{font-size:11.3pt;margin:5mm 0 1.5mm;color:#1F5C5A;page-break-after:avoid;}
+table{border-collapse:collapse;width:100%;margin:2.5mm 0;font-size:9.2pt;page-break-inside:avoid;}
+th,td{border:1px solid #CFC8BA;padding:1.3mm 2mm;text-align:left;vertical-align:top;}
+th{background:#EFEAE0;} td.n{text-align:right;font-variant-numeric:tabular-nums;}
+.box{border:1px solid #CFC8BA;border-left:5px solid #1F5C5A;background:#F6F9F7;padding:3mm 4mm;margin:3mm 0;page-break-inside:avoid;}
+.warn{border-left-color:#B4532A;background:#FBF4EF;}
+.why{color:#5A564E;font-size:9.4pt;}
+img{width:100%;margin:2mm 0;page-break-inside:avoid;}
+.pb{page-break-before:always;}
+.small{font-size:8.8pt;color:#5A564E;}
+.g{background:#E3EFEC;} .r{background:#F7E6DD;}
+</style></head><body>
+<h1>4팀 11/15 작업 기록: 06 설명 단계 · 학습 기간 · 기간별 5분위 · 뉴스 파일럿</h1>
+<p class="small">작성: 영섭 (분석 실행은 Claude Code로 함). 모든 코드는 <code>연습장/</code> 아래에만 있고, 팀 원본 코드(<code>Quant/src</code>)는 건드리지 않았다. 기사 원문은 깃에 올리지 않았고, 원문이 없는 집계표와 그림만 올렸다.</p>
+
+<div class="box"><b>한 쪽 요약</b>
+<ol>
+<li><b>XGBoost와 Fama-MacBeth는 방향이 9개 변수 모두 같다.</b> SHAP으로 본 XGBoost의 방향(클수록 예측을 올리나 내리나)이 FM 계수 부호와 전부 일치한다. 중요도 1위는 고유변동성, 수급 두 변수는 7·8위.</li>
+<li><b>같은 9개 변수로 예측하면 XGBoost가 FM보다 조금 낫다.</b> 평균 IC 0.092 vs 0.075, 차이 t = 2.15, 11년 중 7년 XGBoost 우세. 두 모델의 종목 순위는 상관 0.62로 상당히 비슷하다.</li>
+<li><b>학습 기간은 지금처럼 2001년부터 계속 쌓는 게 가장 좋다.</b> 최근 10·7·5년만 쓰는 방식은 4단계 모두에서 IC가 0.002~0.010 낮았다. → 지금 방식을 그대로 쓴다(교수님 F9 확인 완료).</li>
+<li><b>기간을 나누면 변수의 힘이 시기마다 다르다.</b> 가치·고유변동성·주식발행은 2001–10년에 강했고, 규모는 2011년 이후에 강하다. 개인 순매수의 '반대 방향(+)'은 2011년 이후에 생긴 현상이다.</li>
+<li><b>뉴스 파일럿 (52개 파일, 27만 건 → 점수 9.3만 건):</b> 감성 점수(긍정확률−부정확률)는 기사를 제대로 읽는다. 논조가 좋은 달에 그 종목 주가도 올랐다(같은 달 IC 0.095, t 8.4). 그런데 <b>다음 달 수익률은 예측하지 못했다</b>(IC 0.001). 기사 종류를 나누거나 월말 기사만 쓰거나 평소 대비 변화로 바꿔도 마찬가지였다.</li>
+<li><b>H3(화제형 논조 +)는 파일럿에서 지지되지 않는다.</b> 화제형 기사는 거의 다 긍정이라 점수가 차이를 못 만든다. H4(호재+개인매수 → 더 약함)도 방향은 맞지만 t −0.6~−1.1로 약하다. 본 데이터(아영 정리본 128만 건)로 다시 확인해야 결론을 낼 수 있다.</li>
+<li><b>새로 보인 후보:</b> 기사가 많이 나온 종목은 다음 달 수익률이 낮다(IC −0.016, t −2.9). 관심이 몰린 종목이 고평가된다는 '관심 효과'와 맞는 방향이다. 다만 파일럿 표본의 편향일 수도 있어 본 데이터로 확인할 것.</li>
+</ol></div>
+
+<h2>1. 이번에 한 일과 이유</h2>
+<table>
+<tr><th style="width:24%">작업</th><th>왜 했나</th><th style="width:26%">파일</th></tr>
+<tr><td>06 설명 단계: SHAP</td><td>교수님 F11 "트리는 +/−를 모르지만 SHAP을 찍으면 얼추 보인다". XGBoost가 FM과 같은 방향으로 학습했는지 확인.</td><td>step12_explain.py → shap_vs_fm.csv, figK</td></tr>
+<tr><td>06: FM 예측 vs XGBoost 예측</td><td>이안 제안 "파마맥베스가 예상하는 수치랑 XGBoost가 예상하는 수치 차이". 같은 변수·같은 누적 방식으로 공정하게 비교.</td><td>step12_explain.py → fm_vs_xgb_*.csv, figL</td></tr>
+<tr><td>학습 기간: 확장 vs 롤링</td><td>교수님 F9 "반대쪽에서 당길 필요는 없나". 오래된 해가 방해가 되는지 확인(창 고르기가 아니라 점검).</td><td>step13_rolling.py → rolling_vs_expanding.csv, figN</td></tr>
+<tr><td>기간별 5분위</td><td>교수님 F2 "연도별로 나눠서 또 다를 수도". 9개 변수 그림을 2001–10/2011–15/2016–21로.</td><td>step14_period_quint.py → quint_by_period.csv, figM</td></tr>
+<tr><td>뉴스 파일럿 1 (만들기)</td><td>이안 제안 "긍정확률−부정확률이 얼마나 유의미한지 파일럿", 교수님 "기간을 길게 잡아서". 정리본(686MB)은 내 환경으로 못 가져와서, 같은 원자료 중 작은 파일 52개(2001–2021)로 처음부터 같은 절차를 적용.</td><td>news/pilot_build.py → pilot_news_monthly.csv</td></tr>
+<tr><td>뉴스 파일럿 2 (분석)</td><td>교수님 F3 "뉴스도 먼저 찍어 보라". 같은 달·다음 달 상관, 3분위, FM, H4.</td><td>news/pilot_analyze.py → pilot_ic.csv 외, figP</td></tr>
+<tr><td>뉴스 파일럿 3 (더 쪼개기)</td><td>"같은 달엔 맞고 다음 달엔 안 맞는" 이유를 확인. 주가 보도 기사 제외, 월말 기사, 평소 대비 변화, 비율형.</td><td>news/pilot_extra.py → pilot_extra_ic.csv</td></tr>
+</table>
+
+<h2>2. 정형 변수 추가 분석</h2>
+<h3>2-1. SHAP: XGBoost가 본 방향 = FM 방향</h3>
+<p class="why">방법: 수급까지 넣은 마지막 모델(학습 2001-01~2020-11)로 2011–2021 검증 표본 2만 개의 SHAP 값을 계산. 방향 = 변수 순위와 SHAP 값의 상관.</p>
+<table>
+<tr><th>변수</th><th>중요도 순위</th><th>SHAP 방향</th><th>FM 계수(%p)</th><th>FM t</th><th>일치</th></tr>
+<tr><td>고유변동성</td><td class="n">1</td><td class="n">−0.91</td><td class="n">−0.74</td><td class="n">−1.99</td><td>같음</td></tr>
+<tr><td>단기 반전</td><td class="n">2</td><td class="n">−0.74</td><td class="n">−0.15</td><td class="n">−0.39</td><td>같음</td></tr>
+<tr><td>모멘텀</td><td class="n">3</td><td class="n">+0.89</td><td class="n">+1.01</td><td class="n">2.47</td><td>같음</td></tr>
+<tr><td>가치</td><td class="n">4</td><td class="n">+0.89</td><td class="n">+0.14</td><td class="n">0.39</td><td>같음</td></tr>
+<tr><td>규모</td><td class="n">5</td><td class="n">−0.20</td><td class="n">−2.56</td><td class="n">−6.06</td><td>같음</td></tr>
+<tr><td>주식 발행</td><td class="n">6</td><td class="n">−0.60</td><td class="n">−0.52</td><td class="n">−1.76</td><td>같음</td></tr>
+<tr><td>개인 순매수</td><td class="n">7</td><td class="n">+0.56</td><td class="n">+0.76</td><td class="n">3.14</td><td>같음</td></tr>
+<tr><td>외국인 순매수</td><td class="n">8</td><td class="n">−0.62</td><td class="n">−0.23</td><td class="n">−1.17</td><td>같음</td></tr>
+<tr><td>베타</td><td class="n">9</td><td class="n">−0.48</td><td class="n">−0.24</td><td class="n">−0.79</td><td>같음</td></tr>
+</table>
+<p><b>읽는 법:</b> 규모는 FM에서 가장 강한데(t −6) SHAP 방향 상관은 −0.20으로 약하다. 그림을 보면 규모는 '가장 작은 10%'에서만 크게 올리고 나머지는 거의 평평하다. 즉 <b>소형주 끝단에만 효과가 몰린 비선형</b> 모양이라 직선 상관이 작게 나온 것이다. 이렇게 모양을 보여 주는 게 SHAP을 쓰는 이유다.</p>
+<img src="../out/figK_shap_dependence.png">
+
+<h3>2-2. 같은 변수로 FM 예측 vs XGBoost 예측</h3>
+<p class="why">방법: 매년 1월에 '그때까지의 월별 FM 계수 평균'으로 그해 12개월을 예측(XGBoost와 같은 누적 방식, 미래 정보 없음).</p>
+<table>
+<tr><th>항목</th><th>Fama-MacBeth 예측</th><th>XGBoost 예측</th></tr>
+<tr><td>평균 IC (2011–2021, 131개월)</td><td class="n">0.0749 (t 9.4)</td><td class="n">0.0920 (t 10.3)</td></tr>
+<tr><td>차이 (XGB − FM)</td><td colspan="2" class="n">+0.0172, t 2.15 · XGBoost가 이긴 해 7/11</td></tr>
+<tr><td>두 예측의 종목 순위 상관</td><td colspan="2" class="n">0.62</td></tr>
+</table>
+<p><b>해석:</b> 직선(FM)만으로도 IC의 80%가 나온다. XGBoost가 더한 0.017은 위의 '소형주 끝단' 같은 비선형 모양 덕분으로 보인다. 발표에서는 "변수 선택 판정은 둘 다로, 예측은 XGBoost가 조금 더 낫다"로 정리하면 된다.</p>
+<img src="../out/figL_fm_vs_xgb.png">
+
+<h3>2-3. 학습 기간: 확장(지금) vs 롤링</h3>
+<table>
+<tr><th>평균 IC</th><th>기준선</th><th>+통제</th><th>+보강</th><th>+수급</th><th>확장보다 나은 해 (수급 단계)</th></tr>
+<tr class="g"><td>확장 (2001~)</td><td class="n">0.0511</td><td class="n">0.0769</td><td class="n">0.0878</td><td class="n">0.0920</td><td>—</td></tr>
+<tr><td>롤링 10년</td><td class="n">0.0478</td><td class="n">0.0739</td><td class="n">0.0842</td><td class="n">0.0899</td><td class="n">3/11</td></tr>
+<tr><td>롤링 7년</td><td class="n">0.0463</td><td class="n">0.0697</td><td class="n">0.0811</td><td class="n">0.0859</td><td class="n">4/11</td></tr>
+<tr><td>롤링 5년</td><td class="n">0.0433</td><td class="n">0.0689</td><td class="n">0.0779</td><td class="n">0.0838</td><td class="n">5/11</td></tr>
+</table>
+<p><b>결론:</b> 창을 줄일수록 단계와 상관없이 IC가 낮아진다. 오래된 데이터가 방해가 되지 않고 오히려 도움이 된다. <b>지금 방식(확장)을 유지</b>하고, 발표에서는 "확인해 봤다"는 근거로 이 표 하나를 보여 준다. 단계별 판정(어떤 변수가 IC를 올리나)도 모든 창에서 같은 순서로 나와 판정이 학습 기간에 흔들리지 않는다.</p>
+<img src="../out/figN_rolling.png">
+
+<h3>2-4. 9개 변수 기간별 5분위 (Q5−Q1, %p/월, 동일가중)</h3>
+<table>
+<tr><th>변수</th><th>2001–2010</th><th>2011–2015</th><th>2016–2021</th><th>한 줄</th></tr>
+<tr><td>베타</td><td class="n">+0.22</td><td class="n r">−1.54 (t −3.0)</td><td class="n">+0.43</td><td>2011–15에만 −</td></tr>
+<tr><td>규모</td><td class="n">−0.62</td><td class="n r">−2.34 (t −4.2)</td><td class="n r">−1.89 (t −4.1)</td><td>최근에 강해진 소형주 효과</td></tr>
+<tr><td>가치</td><td class="n g">+2.09 (t 5.1)</td><td class="n">+0.48</td><td class="n g">+1.18 (t 2.3)</td><td>꾸준히 +, 2011–15에 약함</td></tr>
+<tr><td>단기 반전</td><td class="n r">−0.83 (t −2.0)</td><td class="n">−0.24</td><td class="n">−0.43</td><td>약해짐</td></tr>
+<tr><td>모멘텀</td><td class="n g">+1.25 (t 2.3)</td><td class="n g">+1.41 (t 2.1)</td><td class="n">−0.74 (t −1.7)</td><td>2016년 이후 뒤집힘 주의</td></tr>
+<tr><td>고유변동성</td><td class="n r">−1.95 (t −3.7)</td><td class="n">−0.11</td><td class="n">−0.48</td><td>2010년 이전 효과</td></tr>
+<tr><td>주식 발행</td><td class="n r">−1.36 (t −5.0)</td><td class="n">−0.35</td><td class="n">−0.24</td><td>2010년 이전 효과</td></tr>
+<tr><td>개인 순매수</td><td class="n">+0.13</td><td class="n">+0.68 (t 1.9)</td><td class="n g">+0.71 (t 2.5)</td><td>H1 반대(+)는 최근 현상</td></tr>
+<tr><td>외국인 순매수</td><td class="n">−0.37</td><td class="n">−0.24</td><td class="n">−0.36</td><td>H2 반대(−), 어느 기간도 유의하지 않음</td></tr>
+</table>
+<p><b>왜 중요한가:</b> 확장 학습이 롤링보다 나은 이유와도 이어진다. 효과가 시기마다 켜졌다 꺼지니 여러 시기를 다 본 모델이 덜 흔들린다. 또 모멘텀이 2016년 이후 반대로 돈 것은 발표에서 질문이 나올 수 있으니 미리 알아 둘 것.</p>
+<img src="../out/figM_quint_by_period.png">
+
+<h2 class="pb">3. 뉴스 파일럿</h2>
+<h3>3-1. 데이터 흐름 (모든 숫자는 실제 실행 결과)</h3>
+<table>
+<tr><th>단계</th><th>건수</th><th>왜 이렇게 했나</th></tr>
+<tr><td>원자료 52개 파일 읽기</td><td class="n">322,152</td><td>정리본 686MB는 드라이브 도구 한도(10MB) 때문에 못 가져옴 → 10MB 미만 원자료 파일만(담당 1~4, 2001–2021 고르게)</td></tr>
+<tr><td>빅카인즈 '분석제외(중복·예외)' 빼기</td><td class="n">298,016</td><td>빅카인즈가 이미 중복으로 표시한 기사</td></tr>
+<tr><td>언론사 5곳 (매경·머투·서경·파뉴·한경)</td><td class="n">298,016</td><td>수집 단계에서 이미 5곳만 받음 (확인용)</td></tr>
+<tr><td>뉴스 식별자 중복 빼기</td><td class="n">274,575</td><td>같은 기사가 여러 검색어 파일에 들어감</td></tr>
+<tr><td>제목·언론사·날짜 같은 기사 빼기</td><td class="n">270,724</td><td>식별자만 다른 재송고</td></tr>
+<tr><td>제목에 회사 이름 있는 기사</td><td class="n">104,093</td><td>본문에만 잠깐 나온 회사는 그 회사 기사가 아님 → 제목 기준 (38%만 남음)</td></tr>
+<tr><td>└ (기사, 회사) 짝</td><td class="n">119,470 / 438종목</td><td>한 기사 제목에 두 회사가 나오면 둘 다에 붙임</td></tr>
+<tr><td>광고 빼고 감성 점수</td><td class="n">93,430</td><td>KR-FinBert-SC, 재학습 없음, 제목+본문 앞 200자, CPU 94분</td></tr>
+<tr><td>회사×월 칸</td><td class="n">16,932</td><td>마지막 거래일 당일·이후 기사는 다음 달로 (미래 정보 막기)</td></tr>
+</table>
+
+<h3>3-2. 이름 겹침을 '기간'으로 풀기 (지난번 29개 회사 문제의 해결책 시험)</h3>
+<p>같은 이름을 두 종목이 쓰는 경우(삼성물산·SK·미래에셋증권·한국타이어·오리온 등)를 예전에는 통째로 버렸다. 이번에는 <b>① 합병·분할 날짜로 '이 이름은 언제부터 언제까지 어느 종목'</b>을 정한 수동 규칙 16개, <b>② 그 외에는 실제로 상장돼 거래되던 기간</b>으로 주인을 정했다. 결과: <b>7,873건을 살렸고</b>, 그래도 주인을 못 정한 831건만 버렸다.</p>
+<div class="box warn">수동 규칙의 날짜(예: SK 2015-08 합병, 삼성물산 2015-09 합병, 한국타이어 2012-09 분할)는 기억에 기반한 것이라 <b>공시로 한 번 확인해야 한다</b>. 파일: <code>news/pilot_build.py</code>의 <code>OVERRIDE</code>. 본 데이터에서도 이 방식을 그대로 쓰자고 제안함.</div>
+
+<h3>3-3. 유형 분류 비율 (키워드 규칙 v1)</h3>
+<table><tr><th>기타</th><th>화제형</th><th>공시형</th><th>광고</th><th>논란형</th></tr>
+<tr><td class="n">33.7%</td><td class="n">25.8%</td><td class="n">24.4%</td><td class="n">10.2%</td><td class="n">5.8%</td></tr></table>
+<p>평균 점수: 화제형 +0.39, 공시형 +0.32, 기타 +0.17, 논란형 −0.46. 점수는 −1이나 +1 근처에 몰려 있다(중간값 0.003). 사람 정답(예원·아영 100건)이 아직 없어 정확도는 모른다. 받으면 <code>agreement()</code>로 바로 잰다.</p>
+
+<h3>3-4. 점수가 기사를 제대로 읽나 (눈 점검)</h3>
+<p>가장 부정 30건은 '영업익 반토막', '실적 악화 우려로 하락', '조사 착수로 급락' 같은 기사였고, 가장 긍정 30건은 '목표가 상향', '수출 계약', '실적 개선 기대' 같은 기사였다. 방향은 맞다. (원문 목록은 깃 밖 <code>data/news_pilot_work/</code>에만 있음)</p>
+
+<h3>3-5. 결과: 같은 달엔 맞고, 다음 달엔 안 맞는다</h3>
+<p class="why">표본: 파일럿에서 기사가 1건 이상 있는 (종목, 연도) 안의 모든 종목-월 45,241개(434종목, 251개월). IC = 매월 횡단면 순위상관의 평균.</p>
+<img src="../out/news_pilot/figP_pilot_ic.png">
+<table>
+<tr><th>변수</th><th>같은 달 IC (t)</th><th>다음 달 IC (t)</th><th>칸 수</th></tr>
+<tr><td>전체 논조</td><td class="n g">0.095 (8.4)</td><td class="n">0.001 (0.1)</td><td class="n">14,680</td></tr>
+<tr><td>화제형 논조 (H3 정의)</td><td class="n">0.030 (1.7)</td><td class="n">−0.024 (−1.3)</td><td class="n">5,857</td></tr>
+<tr><td>공시형 논조</td><td class="n g">0.088 (5.4)</td><td class="n">0.009 (0.6)</td><td class="n">7,907</td></tr>
+<tr><td>논란형 논조</td><td class="n g">0.057 (2.0)</td><td class="n">−0.048 (−1.5)</td><td class="n">2,342</td></tr>
+<tr><td>기타 논조</td><td class="n g">0.132 (9.3)</td><td class="n">0.019 (1.4)</td><td class="n">9,378</td></tr>
+<tr><td>기사 수 (log)</td><td class="n g">0.020 (3.5)</td><td class="n r">−0.016 (−2.9)</td><td class="n">45,241</td></tr>
+</table>
+<p>논조 3분위로 보면 같은 달엔 상−하 <b>+2.69%p/월 (t 6.9)</b>, 다음 달엔 <b>−0.09%p (t −0.3)</b>. 9개 통제를 넣은 FM에서도 논조 계수는 0 근처(t −0.8)다.</p>
+
+<h3>3-6. 왜 다음 달엔 안 맞을까: 더 쪼개 본 결과</h3>
+<table>
+<tr><th>확인</th><th>같은 달 IC (t)</th><th>다음 달 IC (t)</th><th>뜻</th></tr>
+<tr><td>A. 주가 보도 기사(특징주·급등락 등, 14%) 빼기</td><td class="n g">0.059 (5.0)</td><td class="n">−0.011 (−1.0)</td><td>'주가가 기사를 만든' 몫을 빼도 같은 달 상관이 남음 → 점수가 진짜 소식을 읽음</td></tr>
+<tr><td>A'. 주가 보도 기사만</td><td class="n g">0.235 (11.5)</td><td class="n">0.027 (1.4)</td><td>당연히 같은 달과 강하게 연결</td></tr>
+<tr><td>B. 월말 2주 기사만</td><td class="n g">0.092 (7.1)</td><td class="n">0.020 (1.5)</td><td>늦은 소식이 다음 달로 조금 이어지는 기미, 유의하지 않음</td></tr>
+<tr><td>C. 평소 대비 논조 변화</td><td class="n g">0.088 (8.0)</td><td class="n">−0.002 (−0.2)</td><td>변화로 바꿔도 같음</td></tr>
+<tr><td>D. 강한 부정 비율 / 강한 긍정 비율</td><td class="n">−0.066 / 0.072</td><td class="n">0.003 / 0.002</td><td>평균 대신 비율로 해도 같음</td></tr>
+<tr><td>E. 화제형 비율</td><td class="n">−0.039 (−3.7)</td><td class="n">0.006 (0.6)</td><td>—</td></tr>
+</table>
+<p><b>해석:</b> 상위 대형주의 뉴스는 <b>나온 그달 안에 주가에 반영이 끝난다.</b> 그래서 감성 점수는 '좋은 측정기'지만 '예측 변수'로는 약하다. 화제형 논조가 특히 약한 이유는 화제형 기사(신제품·수주·진출)가 거의 다 긍정이라 종목끼리 점수 차이가 안 나기 때문이다.</p>
+
+<h3>3-7. H4 설거지 표 (파일럿, 방향만 참고)</h3>
+<table>
+<tr><th>항목 (다음 달 수익률, 개인 많음 − 적음)</th><th>평균 %p</th><th>t</th></tr>
+<tr><td>호재 종목 안에서</td><td class="n">+0.03</td><td class="n">0.1</td></tr>
+<tr><td>기사 없는 종목 안에서</td><td class="n">+0.25</td><td class="n">1.2</td></tr>
+<tr><td>악재 종목 안에서</td><td class="n">+0.46</td><td class="n">1.4</td></tr>
+<tr><td><b>DiD (호재 − 기사 없음)</b></td><td class="n">−0.22</td><td class="n">−0.6</td></tr>
+<tr><td><b>DiD (호재 − 악재)</b></td><td class="n">−0.43</td><td class="n">−1.1</td></tr>
+</table>
+<p>방향은 H4와 같다(호재일 때 개인이 많이 산 종목이 상대적으로 더 약함). 하지만 유의하지 않다. 호재 칸이 달마다 몇 개 안 되는 파일럿이라 본 데이터에서 다시 봐야 한다.</p>
+
+<div class="box warn"><b>파일럿의 한계 (결과를 그대로 믿으면 안 되는 이유)</b>
+<ul>
+<li>52개 파일은 담당·연도별로 고르게 뽑았지만 <b>회사 목록 전체를 덮지 않는다</b>. 기사 1건 이상 있는 (종목, 연도)를 '수집됨'으로 봤는데, 다른 회사 검색 결과에 우연히 이름이 나온 경우도 들어가서 '기사 없음' 비교(no_news, 기사 수 효과)는 치우칠 수 있다.</li>
+<li>유형 분류 정확도는 사람 정답이 없어 아직 모른다.</li>
+<li>그래서 <b>판정은 하지 않았고</b>, "본 데이터로 무엇을 볼지"만 정했다.</li>
+</ul></div>
+
+<h2>4. 본 데이터(아영 정리본 전체)로 할 것: 제안</h2>
+<ol>
+<li><b>주 지표는 '전체 논조'와 '기사 수'</b>로 넓히고, 화제형 논조(H3 원래 정의)는 같이 보고한다. 미리 정한 H3를 바꾸는 게 아니라, 파일럿에서 화제형 점수가 모두 긍정 쪽에 몰린 문제를 함께 보여 주는 것.</li>
+<li>H3 판정 규칙은 그대로 둔다(4단계 IC 증가 + FM t≥2). 결과를 보고 규칙을 바꾸지 않는다.</li>
+<li>이름 겹침은 기간 규칙으로 처리한다(본 파일럿 방식). 아영님 회사 목록에 <code>first_month / last_month</code> 칸을 추가한다.</li>
+<li>'같은 달 IC'를 점수 타당성 지표로 함께 보고한다. 교수님이 "점수가 의미 있나"를 물으시면 이 숫자로 답한다.</li>
+<li>본 데이터 감성 점수는 Colab T4 GPU로(CPU로는 9.3만 건에 94분, 본 데이터는 수십만 건).</li>
+</ol>
+
+<h2>5. 영섭이 확인하거나 정해야 할 것</h2>
+<table>
+<tr><th style="width:5%">#</th><th>내용</th><th style="width:22%">누구</th></tr>
+<tr><td>1</td><td>아영 정리본 <code>articles_clean_100.csv</code>(686MB)는 내가 못 가져온다. Colab 노트북(영섭_분류시험_감성점수.ipynb)으로 돌리거나, 압축해서 10MB 이하로 쪼개 주면 같은 분석을 바로 돌릴 수 있다.</td><td>영섭/아영</td></tr>
+<tr><td>2</td><td>예원·아영 분류시험 100건 정답이 드라이브에 아직 없다. 받으면 일치율·화제형 정밀도를 잰다.</td><td>예원·아영</td></tr>
+<tr><td>3</td><td>이름 겹침 수동 규칙 날짜 16개를 공시로 확인(합병·분할일).</td><td>영섭 (30분)</td></tr>
+<tr><td>4</td><td>이안 매크로 642개 파일은 이름이 목록과 달라 '종목코드'로 짝을 맞춰야 한다. 파일 이름 규칙을 알려 주면 짝 맞추는 코드를 붙인다.</td><td>이안</td></tr>
+<tr><td>5</td><td>현대모비스·현대제철·LG이노텍·한국금융지주처럼 받았는데 0건인 회사는 정리 단계에서 빠진 것 같다. 아영님 정리 코드에서 회사명 칸 확인.</td><td>아영</td></tr>
+<tr><td>6</td><td>월요일 박준호 교수님 면담 때: "뉴스가 그달에 반영이 끝나는 결과를 어떻게 해석·발표할지", "기사 수(관심) 효과를 H3 대신 볼지" 여쭤 보기.</td><td>영섭</td></tr>
+</table>
+
+<h2>6. 파일</h2>
+<p class="small">코드: 연습장/step12_explain.py, step13_rolling.py, step14_period_quint.py, news/pilot_build.py, news/pilot_analyze.py, news/pilot_extra.py<br>
+결과: 연습장/out/shap_vs_fm.csv, fm_vs_xgb_pred.csv, fm_vs_xgb_by_year.csv, rolling_vs_expanding.csv, rolling_ic_monthly.csv, quint_by_period.csv, figK·L·M·N, out/news_pilot/(pilot_news_monthly.csv, pilot_coverage.csv, pilot_ic.csv, pilot_extra_ic.csv, pilot_tercile.csv, pilot_fm.csv, pilot_h4.csv, pilot_build_log.json, figP)<br>
+원문 포함(깃에 없음): /home/user/data/news_pilot/ (원자료), /home/user/data/news_pilot_work/ (점수 붙은 기사, 긍정·부정 상위 30)</p>
+</body></html>
