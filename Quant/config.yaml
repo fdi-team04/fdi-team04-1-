@@ -7,5 +7,7 @@ periods:
 data_dir: /content/data            # docker-compose에서 연결한 경로
 seed: 42
 text_model: snunlp/KR-FinBert-SC
+text_model_rev:                    # 03이 처음 점수를 낼 때 출력하는 모델 커밋 해시를 적어 버전 고정 (비우면 그때의 최신본)
+tables_dir: tables                 # 저장소에 올리는 작은 표: 종목·월 뉴스 표, 마지막 거래일, 수집 기록 (원문 없음)
 xgb: {n_estimators: 300, max_depth: 4, learning_rate: 0.05, subsample: 0.8}
 test_refit: yearly                 # 교수님 답변 후 확정

@@ -18,7 +18,7 @@ STAGES = [
     ["mom", "rev"],                    # 1 통제
     ["vol", "issue"],                  # 2 유지 후보
     ["retail_nb", "foreign_nb"],       # 3 수급 (H1, H2)
-    ["topic_tone"],                    # 4 뉴스 (H3)
+    ["topic_tone", "no_news"],         # 4 뉴스 (H3): 논조 + 기사 없음 표시 (없으면 0.5가 중립 뉴스로 읽힘)
 ]
 
 

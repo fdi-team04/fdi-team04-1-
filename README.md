@@ -25,7 +25,7 @@ docker compose up --build
 ctrl + C
 ```
 
-`Python 3.11.x`가 나오고, `▶ src/01_load_clean.py`부터 `▶ src/05_evaluate.py`까지 출력되면 준비 끝이다.
+`Python 3.11.x`가 나오고, `▶ src/01_load_clean.py`부터 `▶ src/06_explain.py`까지 출력되면 준비 끝이다.
 
 ### 평소 사용
 
@@ -41,7 +41,7 @@ ctrl + C
 - 성공 여부: 실행 직후 `echo $?`(Windows PowerShell은 `$LASTEXITCODE`)가 `0`이면 성공. 실패하면 `Traceback`이 나오고, 바로 위 `▶` 줄이 실패한 단계다.
 - 결과는 내 컴퓨터의 `Quant/data/processed/`에 바로 생긴다.
 - FinBERT 모델은 처음 실행할 때 한 번만 받고 저장해 둔다.
-- Docker는 **CPU만** 쓴다. FinBERT 점수 계산은 시간이 걸리지만 결과를 캐시 파일로 저장하므로 한 번만 돌리면 된다.
+- Docker는 **CPU만** 쓴다. 기사 원문이 없는 환경에서는 FinBERT를 돌리지 않고 저장소의 `Quant/tables/news_monthly.csv`를 읽는다 (아래 "뉴스 점수" 참고).
 - 코드 작성용 로컬 Python(conda 등)은 각자 자유다. 버전은 3.11로 맞추고, **보고서에 쓰는 결과는 Docker로 낸다.**
 - Windows에서 실행이 느리면 저장소를 WSL 안(`\\wsl$\Ubuntu\home\...`)에 받으면 빨라진다.
 
@@ -55,6 +55,7 @@ Team04/
 └── Quant/
     ├── Dockerfile  requirements.txt  config.yaml  run_all.py
     ├── src/
+    ├── tables/      (저장소에 올리는 작은 표, 원문 없음)
     └── data/        (Git 제외)
 ```
 
@@ -64,14 +65,27 @@ Team04/
 | `Quant/Dockerfile` | Docker 이미지: Python 3.11 + 패키지 설치 | 공통 |
 | `Quant/requirements.txt` | 패키지 버전 고정 | 공통 |
 | `Quant/config.yaml` | 기간 구분, 데이터 경로, 시드, 텍스트 모델 | 공통 |
-| `Quant/run_all.py` | `src/01` → `05` 순서 실행 | 공통 |
+| `Quant/run_all.py` | `src/01` → `06` 순서 실행 | 공통 |
 | `Quant/src/01_load_clean.py` | 배포 데이터 결합·시점 정렬 | A |
-| `Quant/src/02_features.py` | 정형 변수 (H1~H7) | A |
-| `Quant/src/03_text_features.py` | 텍스트 감성 점수·결합·순위 변환 (H8) | B-2 |
+| `Quant/src/02_features.py` | 정형 변수 (기준선·통제·유지 후보·수급 H1·H2) | A |
+| `Quant/src/03_text_features.py` | 기사 정제·유형 분류·감성 점수 → 종목·월 뉴스 표 → 결합·순위 변환 (H3) | B-1·B-2 |
+| `Quant/src/news_rules.py` | 기사 유형 키워드 규칙 (03이 불러 쓴다) | B-1 |
+| `Quant/src/make_trading_days.py` | 월별 마지막 거래일 받기 (한 번만, Docker 밖에서) | B-2 |
 | `Quant/src/04_model.py` | 모형 학습 | 미정 |
 | `Quant/src/05_evaluate.py` | 월별 Spearman IC | 미정 |
+| `Quant/src/06_explain.py` | 방향 확인과 해석 (Fama-MacBeth, 5분위 표, H4 표, SHAP) | 미정 |
+| `Quant/tables/` | 종목·월 뉴스 표, 마지막 거래일, 수집 기록 (원문 없음, Git에 올림) | B-1·B-2 |
 | `Quant/data/` | `raw/` 원자료, `processed/` 결과 (Git 제외, 각자 드라이브에서 받음) | 각자 |
 | `docs/` | 정의서, 자료 메모, 재수집 방법 | 각자 |
+
+## 뉴스 점수 (03)
+
+기사 원문은 비공개라 `03_text_features.py`는 환경에 따라 다르게 돈다.
+
+- **기사가 있는 환경** (`data/raw/news/`에 빅카인즈 엑셀이 있거나 `data/processed/articles_clean.parquet`가 있음): 정제 → 유형 분류 → KR-FinBert-SC 점수 → `tables/news_monthly.csv` 저장. 점수 계산이 오래 걸리므로 Colab GPU에서 돌리고, 바뀐 `tables/news_monthly.csv`를 커밋한다.
+- **기사가 없는 환경** (팀원 Docker, 채점): 저장소의 `tables/news_monthly.csv`를 읽어 결합·순위 변환만 한다. 표도 없으면 뉴스 열을 비운 채 통과한다.
+
+처음 한 번은 Docker 밖에서 `python src/make_trading_days.py`(pykrx 필요)로 `tables/last_trading_days.csv`를 만든다. 파일별 설명은 `Quant/tables/README.md`에 있다.
 
 ## 규칙
 
