@@ -1,4 +1,10 @@
-"""2-3 기사 유형 분류: 키워드 규칙 v1 (초안)
+"""2-3 기사 유형 분류: 키워드 규칙 v2 (11/16, 사람 정답 100건 오류 분석 반영. v1은 news_rules_v1.py)
+
+v2에서 바꾼 것 (모두 '규칙의 버그'로 볼 수 있는 것만 고침 — 특정 기사에 맞추는 키워드 추가는 하지 않음):
+ 1. 증권사 리포트 꼬리표를 넓게 잡음: '-대신證', '-현대차', '-메리츠', '..대신' → 기타
+ 2. 목표가·목표주가·투자의견이 있으면 실적 단어가 있어도 기타 (애널리스트 전망이지 회사 공시가 아님)
+ 3. 키워드를 찾기 전에 회사 이름을 지움: '현대산업개발'의 '개발'이 화제형 키워드로 잡히던 문제
+ 4. '출연'(방송 출연까지 잡힘) → '출연금', '株'는 강한 기타에서 뺌, '어닝서프라이즈/어닝쇼크' 공시형 추가
 
 판단 근거: 제목 + 본문 앞 200자 (팀 분류 지시문과 같음). 주가·수익률·전망 정보는 판단에 쓰지 않는다.
 순서: [기타-시황/리포트 먼저 거름] → 광고 → 공시형 → 논란형 → 화제형 → 기타
@@ -16,18 +22,18 @@ OTHER_FIRST = [
     "배당주", "고배당", "투자스토리", "개미", "기관 외인", "株", "보수 1위", "사볼까", "재테크",
 ]
 # 제목이 이 모양이면 증권사 리포트 → 기타  예: "KT&G, ... 시동"-하이투자
-REPORT = re.compile(r'"\s*-\s*\S+(증권|투자)\s*$|-\s*\S+증권\s*$')
+REPORT = re.compile(r"(?:[-–]|\.\.)\s*[^\s-]*(證|증권|투자|대우|현대|대신|동부|하이|흥국|KTB|KB|유진|신영|미래|한투|NH|SK|IBK|키움|메리츠|이베스트|하나|신한|교보|삼성|한화|동양|CJ|굿모닝|한누리|CSFB|맥쿼리|씨티|UBS|모건|골드만|노무라|다이와|CLSA|HMC|부국|한양)\s*$")
 KW = {
     "광고": [
         "[광고]", "[AD]", "[PR]", "협찬", "기획광고",
-        "사회공헌", "기부", "후원", "봉사", "장학", "상생", "기금", "출연", "성금", "나눔", "지원금", "복지",
+        "사회공헌", "기부", "후원", "봉사", "장학", "상생", "기금", "출연금", "성금", "나눔", "지원금", "복지",
         "수상", "표창", "시상", "대상 수상", "인증 획득", "인증을 획득", "선정돼", "으뜸기업",
         "공모전", "모집", "채용", "캠페인", "페스티벌", "콘서트", "전시", "공연", "메세나", "문화예술",
         "ESG 경영", "탄소중립", "친환경 활동", "플로깅", "임직원",
         "브랜드 대상", "브랜드경쟁력", "경쟁력지수", "올해의 브랜드", "우수기업", "인증", "소비자 선정", "광고대상",
     ],
     "공시형": [
-        "공시", "잠정", "실적", "영업이익", "영업익", "매출", "순이익", "순익", "흑자", "적자", "분기",
+        "공시", "잠정", "실적", "어닝서프라이즈", "어닝쇼크", "어닝 서프라이즈", "영업이익", "영업익", "매출", "순이익", "순익", "흑자", "적자", "분기",
         "배당", "자사주", "주주환원", "유상증자", "무상증자", "증자", "감자", "회사채", "채권 발행", "전환사채", "CB 발행", "BW",
         "수주", "공급계약", "단일판매", "계약 체결", "주총", "주주총회", "이사회", "사장 후보", "대표이사 선임", "선임",
         "영업정지", "판매 중단", "사업 중단", "액면분할", "신규 상장", "상장폐지", "합병 결정", "분할 결정",
@@ -46,6 +52,25 @@ KW = {
 ORDER = ["광고", "공시형", "논란형", "화제형"]
 
 
+_COMPANY = None
+
+
+def _mask_company(t):
+    """회사 이름(company_list_최종.csv)을 □로 지움 → 이름 속 낱말(개발, 산업, 화재, 생명…)이 키워드로 잡히지 않게"""
+    global _COMPANY
+    if _COMPANY is None:
+        import os
+        try:
+            import pandas as pd
+            f = os.path.join(os.path.dirname(os.path.abspath(__file__)), "company_list_최종.csv")
+            names = pd.read_csv(f, dtype=str).name.dropna().unique().tolist()
+            names = sorted([n for n in names if len(n) >= 3], key=len, reverse=True)
+            _COMPANY = re.compile("|".join(map(re.escape, names))) if names else False
+        except Exception:
+            _COMPANY = False
+    return _COMPANY.sub(lambda m: "□" * len(m.group(0)), t) if _COMPANY else t
+
+
 def _hits(text):
     return {t: [k for k in KW[t] if k in text] for t in ORDER}
 
@@ -55,10 +80,11 @@ def classify(title, body=""):
     title = str(title or ""); body = str(body or "")[:200]
     if REPORT.search(title):
         return "기타", "N", "증권사 리포트"
-    strong = ["배당주", "고배당", "펀드", "투자스토리", "개미", "기관 외인", "株", "사볼까", "칼럼"]
+    title = _mask_company(title); body = _mask_company(body)
+    strong = ["목표가", "목표주가", "투자의견", "배당주", "고배당", "펀드", "투자스토리", "개미", "기관 외인", "사볼까", "칼럼"]
     if any(k in title for k in strong):
         return "기타", "N", next(k for k in strong if k in title)
-    if any(k in title for k in OTHER_FIRST) and not any(k in title for k in KW["논란형"] + ["공시", "잠정", "실적", "배당", "자사주", "판매 중단", "영업정지"]):
+    if any(k in title for k in OTHER_FIRST) and not any(k in title for k in KW["논란형"] + ["공시", "잠정", "실적", "어닝서프라이즈", "어닝쇼크", "어닝 서프라이즈", "배당", "자사주", "판매 중단", "영업정지"]):
         return "기타", "N", next(k for k in OTHER_FIRST if k in title)
     h = _hits(title)
     if not any(h.values()):
