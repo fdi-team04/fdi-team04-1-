@@ -48,7 +48,7 @@ D = pd.DataFrame(rows); D.to_csv(f"{P}/esg_diff.csv", index=False, encoding="utf
 # 2. IC (순위상관)
 rows = []
 for col, lab in [("esg_net", "ESG 순지표(ESG 기사 있는 칸)"), ("neg", "부정 있음"), ("pos", "긍정 있음")] + \
-                ([("esg_neg_tone", "부정 기사 논조")] if "esg_neg_tone" in u else []):
+                ([("esg_neg_tone", "부정 기사 논조")] if "esg_neg_tone" in u and u.esg_neg_tone.notna().sum() > 100 else []):
     x = u[u[col].notna()]
     def ic(ycol):
         return x.groupby("month").apply(lambda z: z[col].rank().corr(z[ycol].rank()) if z[col].nunique() > 1 and len(z) >= 8 else np.nan, include_groups=False).dropna()
