@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>뉴스 정리 방식 비교</title>
+<style>
+@font-face{font-family:NG;src:url("file:///usr/local/lib/python3.13/dist-packages/koreanize_matplotlib/fonts/NanumGothic.ttf");}
+@font-face{font-family:NG;font-weight:bold;src:url("file:///usr/local/lib/python3.13/dist-packages/koreanize_matplotlib/fonts/NanumGothicBold.ttf");}
+body{font-family:NG,sans-serif;font-size:10pt;line-height:1.6;color:#1E2422;}
+h1{font-size:17pt;margin:0 0 1mm;} .sub{color:#6A665E;font-size:9.4pt;margin-bottom:5mm;}
+h2{font-size:12.5pt;border-bottom:2px solid #1F5C5A;padding-bottom:1mm;margin:5mm 0 2mm;page-break-after:avoid;}
+table{border-collapse:collapse;width:100%;margin:2mm 0;font-size:9.6pt;page-break-inside:avoid;}
+th,td{border:1px solid #CFC8BA;padding:1.4mm 2.2mm;text-align:left;vertical-align:top;} th{background:#EFEAE0;}
+td.n{text-align:right;} img{width:86%;margin:1mm 0;}
+code{background:#F1EEE7;padding:0 1mm;font-size:9.2pt;}
+pre{background:#F4F1EA;border-left:3px solid #1F5C5A;padding:2.5mm 4mm;font-size:9.2pt;line-height:1.6;}
+.r{color:#B4532A;font-weight:bold;} .g{color:#1F5C5A;font-weight:bold;}
+</style></head><body>
+<h1>뉴스 정리 방식 비교 (아영 정리 vs 보정안)</h1>
+<div class="sub">11/17 · 영섭 · 파일럿 기사(빅카인즈 원자료 52개 파일)로 두 방식을 똑같이 돌려서 비교함</div>
+
+<h2>1. 무엇을 비교했나</h2>
+<p>아영님 정리본(articles_clean_200)은 이렇게 만들어졌다.</p>
+<ul>
+<li>회사 목록: company_list_최종.csv를 <b>4열</b>(code, name, first_month, last_month)로 바꿔서 사용</li>
+<li>회사 붙이기: 팀 코드 <code>03_text_features.py</code>의 <code>clean_news</code>를 <code>run_clean3.py</code>로 실행</li>
+<li>match_rules.py(제목 매칭 보정 규칙)는 쓰지 않음</li>
+</ul>
+<p>이 방식을 파일럿 기사에 그대로 돌리고, 같은 기사에 우리 매칭 규칙을 돌린 결과와 하나씩 맞춰 봤다.</p>
+
+<h2>2. 발견한 문제 두 가지</h2>
+<img src="img_clean_cmp.png">
+<table>
+<tr><th style="width:24%">문제</th><th>원인</th><th style="width:30%">영향 (파일럿 기준)</th></tr>
+<tr><td>① 이름 겹치는 회사 기사가 빠짐</td><td>4열로 바꾸면서 '이름을 쓴 기간'(name_first, name_last)이 빠짐. 예: 'SK'는 2015-07까지 003600, 2015-08부터 034730인데 이 구분이 사라짐</td><td><span class="r">4,719건</span>이 '모호'로 버려짐<br>엉뚱한 종목에 붙은 것도 1,483건</td></tr>
+<tr><td>② 다른 회사 기사가 섞임</td><td>clean_news는 이름 앞뒤에 영문·숫자가 붙는 경우만 거름. 한글이 붙거나 리포트 꼬리표인 경우는 못 거름</td><td>붙인 111,131건 중 <span class="r">18,490건(16.6%)</span>이 다른 회사 기사</td></tr>
+</table>
+
+<p>① 때문에 기사가 빠진 회사 (많은 순)</p>
+<table><tr><th>영원무역</th><th>SK</th><th>한국타이어</th><th>오리온</th><th>제일모직</th><th>롯데제과</th><th>만도</th><th>녹십자</th><th>삼성물산</th><th>BGF리테일</th><th>한진해운</th><th>신한은행</th></tr>
+<tr><td class="n">513</td><td class="n">442</td><td class="n">428</td><td class="n">338</td><td class="n">293</td><td class="n">288</td><td class="n">275</td><td class="n">248</td><td class="n">247</td><td class="n">238</td><td class="n">224</td><td class="n">215</td></tr></table>
+
+<p>② 실제로 잘못 붙은 예</p>
+<table>
+<tr><th>제목</th><th style="width:16%">붙은 회사</th><th style="width:30%">왜 틀렸나</th></tr>
+<tr><td>현대차, 쏘나타가 9월판매 기폭제-GS</td><td>GS</td><td>'-GS'는 리포트를 쓴 증권사</td></tr>
+<tr><td>[GS칼텍스배 프로기전] 처음과 끝</td><td>GS</td><td>GS칼텍스 바둑대회</td></tr>
+<tr><td>CJ오쇼핑 '판매수수료 무료' 방송…</td><td>CJ</td><td>CJ오쇼핑은 다른 회사</td></tr>
+<tr><td>KCC건설, 268% 증자비율에…</td><td>KCC</td><td>KCC건설은 다른 회사</td></tr>
+<tr><td>[대한민국 멀티미디어기술대상] 대통령상 / 삼성전자…</td><td>대상</td><td>'기술대상'의 대상</td></tr>
+<tr><td>'두산서 방출' 이재우, 전격 한화행 확정</td><td>두산, 한화</td><td>야구 선수 이적</td></tr>
+<tr><td>하이트진로음료, '하이트제로' 시음회</td><td>하이트진로</td><td>자회사</td></tr>
+</table>
+
+<h2>3. 보정 방법</h2>
+<p>팀 원본 코드는 그대로 두고, <code>아영_정리보정.py</code>의 함수 두 개만 끼워 넣는다.</p>
+<pre>from 아영_정리보정 import to_name_dict, postfilter
+name_dict = to_name_dict("company_list_최종.csv")    # 4열 변환 대신 (이름 기간 반영)
+clean = clean_news(raw, name_dict)                   # 기존 코드 그대로
+clean = postfilter(clean, "company_list_최종.csv")    # 추가 한 줄 (다른 회사 기사 제거)</pre>
+<ul>
+<li><b>to_name_dict</b>: 이름마다 쓴 기간을 넣어 줌. 기간이 비어 있으면 그 종목 상장기간을 씀 → 문제 ① 해결</li>
+<li><b>postfilter</b>: match_rules.py로 다시 확인해서 그 회사 기사가 맞는 것만 남김 → 문제 ② 해결</li>
+</ul>
+<p>필요한 파일: 아영_정리보정.py, match_rules.py, company_list_최종.csv (run_clean3.py와 같은 폴더)</p>
+
+<h2>4. 보정 결과 (파일럿에서 확인)</h2>
+<table>
+<tr><th>항목</th><th>아영 방식</th><th>보정 후</th></tr>
+<tr><td>이름 겹쳐서 버린 기사</td><td class="n r">4,719건</td><td class="n g">0건</td></tr>
+<tr><td>다른 회사 기사 제거</td><td class="n">안 함</td><td class="n g">16,755건 제거</td></tr>
+<tr><td>최종 (기사, 회사) 쌍</td><td class="n">111,131</td><td class="n">98,070</td></tr>
+<tr><td>우리 매칭 규칙 결과와 겹치는 비율</td><td class="n">–</td><td class="n">91.6%</td></tr>
+</table>
+<p>남는 8.4% 차이는 팀 코드가 긴 이름을 먼저 지우는 방식이 조금 달라서 생긴 것으로, 잘못 붙는 기사는 보정 후 남지 않는다.</p>
+
+<h2>5. 다음 순서</h2>
+<ol>
+<li>아영: 보정 넣어서 정리 다시 실행 → articles_clean_200 새로 만들기</li>
+<li>영섭: 새 정리본으로 코랩 노트북 실행 (ESG 분류 + 감성 점수) → news_monthly_200_scored.csv, news_coverage_200.csv</li>
+<li>이안 옛 이름 재수집분(1·2차)은 따로 같은 방식으로 붙여서 합침</li>
+<li>합친 데이터로 ESG 가설(H3'·H4') 분석</li>
+</ol>
+</body></html>
