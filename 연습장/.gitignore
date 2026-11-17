@@ -2,3 +2,4 @@ out/*.parquet
 out/step3_log.txt
 news/__pycache__/
 __pycache__/
+out_yw/*.parquet
