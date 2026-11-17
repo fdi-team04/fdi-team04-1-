@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>4팀 뉴스 분석 과정</title>
+<style>
+@font-face{font-family:NG;src:url("file:///usr/local/lib/python3.13/dist-packages/koreanize_matplotlib/fonts/NanumGothic.ttf");}
+@font-face{font-family:NG;font-weight:bold;src:url("file:///usr/local/lib/python3.13/dist-packages/koreanize_matplotlib/fonts/NanumGothicBold.ttf");}
+body{font-family:NG,sans-serif;font-size:10pt;line-height:1.62;color:#1E2422;}
+h1{font-size:18pt;margin:0 0 1mm;} .sub{color:#6A665E;font-size:9.2pt;margin-bottom:4mm;}
+h2{font-size:12.8pt;border-bottom:2px solid #1F5C5A;padding-bottom:1mm;margin:7mm 0 2.5mm;page-break-after:avoid;}
+h3{font-size:10.8pt;color:#1F5C5A;margin:4mm 0 1.2mm;page-break-after:avoid;}
+table{border-collapse:collapse;width:100%;margin:2mm 0;font-size:9.1pt;page-break-inside:avoid;}
+th,td{border:1px solid #CFC8BA;padding:1.2mm 2mm;text-align:left;vertical-align:top;} th{background:#EFEAE0;}
+td.n{text-align:right;} img{width:92%;display:block;margin:2mm auto;page-break-inside:avoid;}
+.box{border:1px solid #CFC8BA;border-left:5px solid #1F5C5A;background:#F6F9F7;padding:2.5mm 4mm;margin:2.5mm 0;page-break-inside:avoid;}
+.warn{border-left-color:#B4532A;background:#FBF4EF;}
+.g{background:#E3EFEC;} .r{background:#F7E6DD;}
+.small{font-size:8.8pt;color:#5A564E;} .pb{page-break-before:always;}
+ol,ul{margin:1mm 0 1mm 0;padding-left:6mm;}
+</style></head><body>
+
+<h1>뉴스 변수 분석 과정 정리 (H3·H4)</h1>
+<div class="sub">4팀 · 11/13~11/18 · 정형 변수 때처럼 "모델에 넣기 전에 먼저 찍어 보고, 그다음 학습해서 IC를 본다"는 순서로 진행</div>
+
+<div class="box"><b>한 장 요약</b>
+<ol>
+<li>처음 계획은 기사를 <b>유형 5개</b>(광고·공시·논란·화제·기타)로 나눠 <b>화제형 기사 논조</b>(H3)를 보는 것이었다.</li>
+<li>파일럿(빅카인즈 52개 파일)에서 감성 점수는 기사를 제대로 읽었지만(같은 달 IC 0.12, t 10), <b>다음 달 수익률은 못 맞혔다</b>(IC 0.00).</li>
+<li>유형 분류는 사람끼리도 62%만 일치했고 규칙은 69~79%로 통과 기준 80%를 넘지 못했다. 유형 정의 자체가 애매했다.</li>
+<li>교수님 피드백(11/16): 라벨링을 반복해도 끝나지 않는다 → <b>ESG로 범위를 좁혀라</b>(부정 사건 vs 사회공헌).</li>
+<li>ESG 3분류로 바꾸자 사람끼리 78%, 규칙 83% → 버그 수정 후 <b>90%</b>로 기준을 넘었다.</li>
+<li>전체 데이터(129만 건, 477종목, 2001–2021)로 판정한 결과 <b>ESG 뉴스도 다음 달 수익률을 예측하지 못했다</b>. H3'·H4' 모두 지지되지 않음.</li>
+<li>해석: 대형주 뉴스는 그달 안에 가격에 반영된다. 교수님 강의(버냉키 2005: 시장이 예상 못 한 정보만 예측력이 있다)와 같은 결론.</li>
+</ol></div>
+
+<h2>1. 출발점: 왜 '화제형 기사 논조'였나</h2>
+<p>H3는 "화제가 되는 좋은 기사가 나온 종목은 다음 달 수익률이 높다", H4는 "호재 기사 + 개인 순매수가 몰린 종목은 오히려 약하다(설거지)"였다. 기사를 다 섞어 쓰지 않고 유형을 나눈 이유는 기사마다 정보가 주가에 반영되는 속도가 다르다고 봤기 때문이다.</p>
+<table>
+<tr><th style="width:13%">유형</th><th>예</th><th style="width:42%">처음 계획에서 어떻게 쓰려고 했나</th></tr>
+<tr><td>공시형</td><td>실적 발표, 배당, 증자, 수주</td><td>공시로 그날 알려져 바로 반영됨 → H3에서 뺌</td></tr>
+<tr><td>화제형</td><td>신제품, 진출, 제휴, 신사업</td><td>숫자가 없는 소식이라 늦게 반영될 여지 → <b>H3 핵심</b></td></tr>
+<tr><td>논란형</td><td>수사, 소송, 사고</td><td>따로 봄</td></tr>
+<tr><td>광고</td><td>사회공헌, 수상, 캠페인</td><td>회사가 내보낸 홍보 → 뺌</td></tr>
+<tr><td>기타</td><td>시황, 목표가, 특징주</td><td>주가를 보고 쓴 기사 → 뺌</td></tr>
+</table>
+<p>감성 점수는 금융 뉴스로 학습된 <b>KR-FinBert-SC</b>를 그대로(재학습 없이) 써서 기사마다 <b>s = P(긍정) − P(부정)</b>(−1~+1)을 매기고, 그달 마지막 거래일 당일·이후 기사는 다음 달로 넘겨(미래 정보 차단) 회사×월로 평균 냈다.</p>
+
+<h2>2. 데이터를 만들면서 생긴 문제와 해결</h2>
+<p>수집: 빅카인즈, 언론사 5곳(매경·머투·서경·파뉴·한경), 해마다 시총 상위 200 종목. 이안님 매크로로 수집, 아영님이 정리(중복 제거 → 제목에 회사 이름이 있는 기사만 그 회사에 붙임).</p>
+<img src="img_news/f1_funnel.png">
+<table>
+<tr><th style="width:22%">문제</th><th>예</th><th style="width:30%">해결</th></tr>
+<tr><td>① 이름이 겹치는 회사</td><td>'SK'는 2015-07까지 003600, 2015-08부터 034730. '삼성물산', '오리온', '한국타이어' 등 31개 이름</td><td>이름마다 쓴 기간을 정한 표(company_list_최종.csv). 날짜 검색으로 확인</td></tr>
+<tr><td>② 옛 이름 시절 기사 0건</td><td>유수홀딩스 2001–08년 = '한진해운', SK 2010–14년 = 'SK C&amp;C', HL홀딩스 = '만도'</td><td>옛 이름 찾아서 이안님이 2번 재수집 (17건 + 14건)</td></tr>
+<tr><td>③ 제목에서 회사를 잘못 붙임</td><td>'SK텔'→SK, 'CJ오쇼핑'→CJ, '광고대상'→대상, '…목표가↑-대우' 리포트 꼬리표→대우, 야구단 '두산'</td><td>매칭 규칙(match_rules.py): 이름 앞뒤에 붙는 글자, 리포트 꼬리표, 일반 단어 이름을 걸러냄. 파일럿에서 잘못 붙은 19% 제거</td></tr>
+<tr><td>④ 정리 코드에 ①·③이 빠짐</td><td>회사 목록을 4열로 바꾸면서 이름 기간이 사라짐 / 팀 코드는 영문 경계만 확인</td><td>보정 함수 2개(아영_정리보정.py)를 끼워 넣고 다시 정리</td></tr>
+</table>
+<div style="display:flex;gap:3mm"><img src="img_news/f6_clean.png" style="width:58%"><img src="img_news/f5_zero.png" style="width:40%"></div>
+<p class="small">왼쪽: 아영님 정리 방식을 파일럿 기사에 그대로 돌려 비교한 결과. 오른쪽: 남은 42개는 상장 직전·직후나 기사가 원래 거의 없는 소형 회사.</p>
+
+<h2 class="pb">3. 1차 파일럿: 감성 점수가 쓸모 있나</h2>
+<p>정리본 전체(686MB)는 드라이브 도구 한도(10MB) 때문에 바로 못 가져와서, 같은 원자료 중 10MB 미만 파일 52개(2001–2021, 담당 1~4 고르게)로 처음부터 같은 절차를 돌렸다: 32만 건 → 정리 27만 → 회사 매칭 → 광고 뺀 9.3만 건 점수(CPU 94분).</p>
+<img src="img_news/f7_pilot_ic.png">
+<table>
+<tr><th>확인한 것</th><th>같은 달 IC (t)</th><th>다음 달 IC (t)</th><th style="width:36%">뜻</th></tr>
+<tr><td>전체 논조</td><td class="n g">0.121 (10.2)</td><td class="n">0.002 (0.1)</td><td>점수는 기사를 제대로 읽음. 예측력은 없음</td></tr>
+<tr><td>화제형 논조 (H3 정의)</td><td class="n">0.042 (2.2)</td><td class="n">−0.014 (−0.8)</td><td>화제형은 거의 다 긍정이라 종목끼리 차이가 안 남</td></tr>
+<tr><td>주가 보도 기사 뺀 논조</td><td class="n g">0.076 (6.3)</td><td class="n">−0.008 (−0.6)</td><td>'주가가 기사를 만든' 몫을 빼도 같은 달 관계는 남음</td></tr>
+<tr><td>월말 2주 기사만</td><td class="n g">0.113 (8.2)</td><td class="n">0.010 (0.7)</td><td>늦은 소식도 다음 달로 안 이어짐</td></tr>
+<tr><td>평소 대비 논조 변화</td><td class="n g">0.111 (9.4)</td><td class="n">0.000 (0.0)</td><td>변화로 바꿔도 같음</td></tr>
+<tr><td>강한 부정 / 강한 긍정 비율</td><td class="n">−0.086 / 0.091</td><td class="n">0.002 / 0.002</td><td>평균 대신 비율로 해도 같음</td></tr>
+</table>
+<p>논조 3분위로 보면 같은 달엔 상−하 <b>+3.35%p/월 (t 7.9)</b>, 다음 달엔 <b>−0.08%p (t −0.2)</b>. 9개 통제를 넣은 Fama-MacBeth에서도 논조 계수는 0 근처(t −0.2).</p>
+<h3>파일럿에서만 보였다가 사라진 것: 기사 수 효과</h3>
+<p>파일럿에선 기사가 많이 나온 종목이 다음 달에 약했다(관심 효과 후보). 아영님 전체 기사 수로 다시 보니 사라졌다. 파일럿 52개 파일이 회사·연도를 고르게 덮지 못한 데서 생긴 편향이었다.</p>
+<img src="img_news/f3_count.png" style="width:62%">
+
+<h2>4. 1차 분류 시험: 유형 5개는 왜 통과 못 했나</h2>
+<p><b>방법</b>: 기간 4구간 × 25건, 회사당 최대 3건, 기사 원문에 답을 숨긴 시험지 2부 → 예원·아영님이 서로 안 보고 정답 → 컴퓨터(키워드 규칙)와 비교. <b>통과 기준</b>: 사람 최종 정답 대비 규칙 일치 80% 이상, 화제형 정밀도 확인. 떨어지면 키워드를 고치고 <b>새 100건</b>으로 다시(같은 100건으로 다시 재면 점수가 부풀려짐).</p>
+<table>
+<tr><th>결과</th><th>값</th></tr>
+<tr><td>사람끼리 일치</td><td class="r">62% (카파 0.47)</td></tr>
+<tr><td>규칙 v1 (두 사람 합의 62건 기준)</td><td class="r">69%</td></tr>
+<tr><td>규칙 v2 (리포트 꼬리표·목표가·회사 이름 속 낱말 버그 수정)</td><td>79% (같은 표본이라 부풀려진 값)</td></tr>
+<tr><td>화제형 정밀도 / 재현율</td><td class="r">44% / 67%</td></tr>
+</table>
+<p><b>안 된 이유는 규칙보다 정의</b>였다. 많이 갈린 조합: 기타 vs 화제형 11건, 공시형 vs 기타 7건, 광고 vs 화제형 6건, 광고 vs 기타 6건.</p>
+<table>
+<tr><th>기사 예</th><th style="width:30%">갈린 답</th><th style="width:30%">왜 애매한가</th></tr>
+<tr><td>현대증권, 원금 98% 보장형 ELS 공모</td><td>광고 vs 화제형</td><td>신상품 출시는 홍보인가 사업 소식인가</td></tr>
+<tr><td>신세계, 5월 실적호조 목표가↑-대신證</td><td>공시형 vs 기타</td><td>실적 얘기지만 증권사 전망</td></tr>
+<tr><td>현대중공업 지분 540만주 현대상선 연내 매각키로</td><td>공시형 vs 화제형</td><td>결정인가 계획인가</td></tr>
+<tr><td>수주·공급계약을 따냄 / 실적이 나쁨</td><td>공시형 vs 화제형 / 공시형 vs 논란형</td><td>좋다·나쁘다를 유형에 섞으면 겹침</td></tr>
+</table>
+<p>그래서 ① '질문 순서표'(주인공인가 → 주가 얘기인가 → 사건인가 → 확정 사실인가 → 새 사업인가 → 홍보인가)로 바꾸고 ② "유형은 정보 종류, 좋고 나쁨은 감성 점수가 맡는다"로 나누는 안을 만들었다. 하지만 이 상태로는 라벨링 → 규칙 수정 → 재시험을 몇 번 더 돌려야 했다.</p>
+
+<h2 class="pb">5. 교수님 피드백 (11/16)과 방향 전환</h2>
+<div class="box"><b>강의 요지 (금리·환율 논문 2편)</b>
+<ul>
+<li>버냉키·커트너(2005): 금리 변화 중 <b>시장이 예상 못 한 부분만</b> 주가를 움직인다. 이미 예상된 건 가격에 들어가 있다.</li>
+<li>금리·환율처럼 모든 종목에 같은 값인 변수는 순위 예측에 바로 쓸 수 없다 → 종목별 민감도(베타)나 경로 변수(부채비율, 수출 비중)로 만들어야 한다.</li>
+<li>우리 결과와 연결: 감성 점수가 같은 달에만 맞고 다음 달엔 안 맞는 건, 뉴스가 그달 안에 반영된다는 뜻.</li>
+</ul></div>
+<div class="box warn"><b>우리 팀에 하신 말씀</b>
+<ul>
+<li>라벨을 맞추려고 기준 → 라벨링 → 재시험을 반복해도 잘 안 끝난다. 결국 사람이 다 라벨링하는 셈이 된다.</li>
+<li>뉴스에 성격이 다른 정보가 너무 섞여 있다 → <b>ESG로 좁혀라</b>. 부정(수사·사고·파업·산재·갑질) vs 긍정(사회공헌·기부·친환경). 나머지(공시·실적·화제·주가)는 뺀다.</li>
+<li>그러면 좋다/나쁘다가 거의 자명해져 데이터화가 쉬워진다. 키워드 빈도로 −1~+1 지표를 만들어 모델에 넣어 보라.</li>
+<li>ESG가 주가에 영향을 주려면 알려져야 하고, 기업은 좋은 일은 알리고 나쁜 일은 좋은 뉴스로 덮는다는 연구 흐름이 있다 → H4도 ESG 틀로 바꿔도 된다.</li>
+<li>H1·H2는 그대로. H2가 쓸모없다고 나온 것도 결과로 기록.</li>
+</ul></div>
+<table>
+<tr><th style="width:12%"></th><th style="width:44%">바꾸기 전</th><th>바꾼 뒤</th></tr>
+<tr><td>H3</td><td>화제형 기사 논조가 좋으면 다음 달 수익률 +</td><td><b>H3'</b> ESG 부정 사건이 있는 종목은 다음 달(그리고 2~3달 뒤) 수익률 −, ESG 순지표가 높을수록 +</td></tr>
+<tr><td>H4</td><td>호재 + 개인 순매수 → 더 약함</td><td><b>H4'</b> (a) 덮기: 부정 사건이 있는 달에 홍보 기사도 있으면 덜 떨어지나 (b) 부정 사건 종목을 개인이 많이 사면 더 약한가</td></tr>
+<tr><td>판정</td><td colspan="2">결과를 보기 전에 고정: 있음−없음 차이 t≤−2, 또는 Fama-MacBeth(통제 9개) t≥2(방향 맞게), XGBoost 4단계 IC 증가</td></tr>
+</table>
+<p>2~3달 뒤까지 본 이유: 사건·사고는 피해 규모를 바로 알기 어려워 늦게 반영될 수 있다는 것이 이 가설의 논리라서.</p>
+
+<h2>6. ESG 키워드 규칙을 만든 방법</h2>
+<ol>
+<li><b>첫 목록</b>: 기존 논란형·광고 키워드 + 교수님 예(땅콩 회항, 과로사, 산재)를 E·S·G로 나눔 → 부정 81개, 긍정 48개.</li>
+<li><b>판정 순서</b> (처음 걸리는 곳에서 멈춤 → 답이 하나로만 나옴)
+<table style="width:96%">
+<tr><th>①</th><td>주가·투자 기사 (목표가, 특징주, 급등, '-○○증권')</td><td>무관</td></tr>
+<tr><th>②</th><td>스포츠·대회 기사, 스포츠·행사 후원</td><td>무관</td></tr>
+<tr><th>③</th><td>회사에 유리한 판결 (승소, 무죄, 무혐의)</td><td>무관</td></tr>
+<tr><th>④</th><td>재난 성금·기부 기사 ('시장 화재 1억 성금')</td><td>긍정</td></tr>
+<tr><th>⑤</th><td>부정 키워드 (횡령, 수사, 과징금, 산재, 파업, 리콜, 오염 …)</td><td>부정</td></tr>
+<tr><th>⑥</th><td>긍정 키워드 (기부, 봉사, 상생, 친환경, ESG 등급 …)</td><td>긍정</td></tr>
+<tr><th>⑦</th><td>나머지 (실적, 공시, 신제품, 인사)</td><td>무관</td></tr>
+</table></li>
+<li><b>파일럿 기사 8만여 건에 돌려 부정·긍정 30건씩 눈으로 확인 → 고치기</b> 를 반복
+<ul>
+<li>본문까지 찾으니 농구 기사 본문의 '과로', 실적 기사 본문의 '기부'가 걸림 → <b>제목만</b> 보게 함. 아영님 정답 기준 제목만 82% vs 제목+본문 77% (본문까지 보면 무관 38건 중 23건을 잘못 잡음)</li>
+<li>단어 속 오탐을 무시 목록에: '실적발표'의 적발, '문화재'의 화재, '헬로비전'의 로비, '삼성화재', '기관 사고 외인 팔고'의 사고</li>
+</ul></li>
+<li><b>사람 정답과 비교 후 버그 수정(v1.1)</b>: '2분기부터'의 기부, '장기소외주'의 기소, 'IBK장학적금'의 장학, 태권도대회 후원 → 무관.</li>
+</ol>
+
+<h2 class="pb">7. 2차 분류 시험: ESG 3분류</h2>
+<p>시험지는 일부러 규칙 기준으로 섞어 뽑았다: 규칙이 부정이라 한 것 35 · 긍정 35 · 무관 30(그중 15건은 본문에 ESG 단어가 있어 놓쳤을 수 있는 기사). 무작위로 뽑으면 ESG 기사가 100건 중 6건뿐이라 정밀도를 잴 수 없어서다. 두 사람이 다르게 단 22건은 팀 기준 5줄(스포츠 후원은 무관, 진행 중인 수사·소송도 부정, 제품 이름 속 단어는 무관, 직원 개인 인터뷰는 무관, 제품 수상은 무관)로 영섭이 최종 결정.</p>
+<img src="img_news/f2_classify.png">
+<table>
+<tr><th>최종 정답 100건 기준</th><th>규칙 v1 (첫 분석)</th><th>규칙 v1.1 (최종)</th></tr>
+<tr><td>전체 정확도</td><td class="n">83%</td><td class="n g">90%</td></tr>
+<tr><td>부정이라 한 것 중 진짜 부정 (정밀도)</td><td class="n">83%</td><td class="n g">85%</td></tr>
+<tr><td>긍정이라 한 것 중 진짜 긍정 (정밀도)</td><td class="n">80%</td><td class="n g">97%</td></tr>
+<tr><td>진짜 부정·긍정 중 찾아낸 비율 (재현율)</td><td class="n">94% / 93%</td><td class="n">94% / 93%</td></tr>
+</table>
+<p class="small">부정↔긍정을 서로 바꿔 단 건 0건. 틀린 건 모두 무관과의 경계. v1.1은 같은 100건을 보고 버그만 고친 것이라 90%는 약간 높게 나왔을 수 있음.</p>
+
+<h2>8. 전체 데이터 결과 (129만 건 → 회사×월, 상위 200 × 그해 기사 있는 종목, 4만 9천 종목-월)</h2>
+<img src="img_news/f4_esg.png">
+<table>
+<tr><th>검정</th><th>결과</th><th style="width:20%">판정</th></tr>
+<tr><td>부정 ESG 있음−없음, 다음 달</td><td class="n">−0.03%p (t −0.2). 같은 달도 +0.07 (t 0.4)</td><td class="r">반응 없음</td></tr>
+<tr><td>긍정 ESG 있음−없음</td><td class="n">같은 달 +0.49%p (t 3.2) → 다음 달 +0.13 (t 0.8)</td><td>같은 달에만</td></tr>
+<tr><td>IC: ESG 순지표 / 긍정 있음, 다음 달</td><td class="n">0.003 (t 0.4) / 0.010 (t 2.0)</td><td>긍정은 아래에서 사라짐</td></tr>
+<tr><td>Fama-MacBeth (통제 9개 + 부정·긍정)</td><td class="n">부정 +0.03%p (t 0.3), 긍정 +0.11%p (t 0.8)</td><td class="r">유의하지 않음</td></tr>
+<tr><td>XGBoost 3단계 → 4단계(+ESG)</td><td class="n">IC 0.0298 → 0.0292, 나은 해 6/11</td><td class="r">개선 없음</td></tr>
+<tr><td>H4'(a) 덮기: 부정 종목 중 홍보 있음−없음</td><td class="n">+0.04%p (t 0.1)</td><td class="r">효과 없음</td></tr>
+<tr><td>H4'(b) 부정 종목 개인 많음−적음 (차이의 차이)</td><td class="n">−0.19%p (t −0.7)</td><td>방향만 맞음</td></tr>
+</table>
+<p class="small">긍정 ESG의 '다음 달 IC t 2.0'은 통제를 넣으면 사라진다: 큰 회사가 홍보 기사를 많이 내서 생긴 착시. 규칙 v1과 v1.1 결과는 거의 같았다.</p>
+
+<h2>9. 결론과 남은 것</h2>
+<div class="box">
+<ul>
+<li><b>H3·H3'</b>: 화제형 논조도, ESG 뉴스도 다음 달 수익률을 예측하지 못했다. 같은 달에는 관계가 있다 → 뉴스는 그달 안에 반영된다.</li>
+<li><b>H4·H4'</b>: 덮기·설거지 효과 모두 유의하지 않다.</li>
+<li>교수님 강의(예상 못 한 정보만 예측력이 있다)와 같은 결론이고, "모델에 넣어 보기 전에 먼저 찍어 본다"는 순서대로 확인한 결과다.</li>
+<li>과정에서 얻은 것: 회사 매칭 규칙(이름 기간, 오탐 거르기), 옛 이름 보완, ESG 3분류 규칙(정답 대비 90%)은 다른 뉴스 분석에도 그대로 쓸 수 있다.</li>
+</ul></div>
+<p><b>한계</b>: 상위 200 대형주만 봄 / 제목만 보고 분류 / 사건의 크기(피해액, 보도량 급증)는 반영 못 함 / ESG 기사의 감성 점수는 디스크 문제로 이번엔 건너뜀(있음·없음부터 효과가 0이라 결론이 바뀌기 어려움).</p>
+<p><b>교수님께 여쭐 것</b>: 이 결과로 정리해도 되는지, 아니면 작은 종목·큰 사건(보도량 급증)만 따로 볼지.</p>
+<p class="small">코드·결과: 깃 claude/gracious-fermat-5vr5w2 브랜치 연습장/news (match_rules.py, esg_rules.py, 영섭_ESG_VSCode.py, esg_analysis.py), 연습장/out/news_pilot, news_full200, news_esg_full_v11. 기사 원문은 깃에 올리지 않음.</p>
+</body></html>
