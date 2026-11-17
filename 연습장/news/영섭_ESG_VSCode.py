@@ -9,6 +9,7 @@
 같은 폴더에 둘 것: 이 파일, esg_rules.py, articles_clean.csv(아영 드라이브에서 내려받기)
 실행:
     python 영섭_ESG_VSCode.py articles_clean.csv
+    python 영섭_ESG_VSCode.py articles_clean.csv --no-score   ← 감성 점수 없이 ESG 건수만 (모델 400MB 안 받음, 1분)
 결과(같은 폴더, 원문 없음 → Claude에게 보내기): esg_monthly.csv, esg_coverage.csv
 """
 import os, sys, time
@@ -16,7 +17,9 @@ import numpy as np, pandas as pd
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from esg_rules import classify_esg
 
-SRC = sys.argv[1] if len(sys.argv) > 1 else "articles_clean.csv"
+ARGS = [a for a in sys.argv[1:] if not a.startswith("--")]
+NO_SCORE = "--no-score" in sys.argv
+SRC = ARGS[0] if ARGS else "articles_clean.csv"
 OUT = os.path.dirname(os.path.abspath(SRC))
 
 # 1. 읽기 (칸 이름이 조금 달라도 맞춰 읽음)
@@ -42,25 +45,29 @@ x["esg"] = r.str[0]; x["esg_area"] = r.str[1]
 print("ESG 비율:", x.esg.value_counts(normalize=True).round(4).to_dict(), f"({time.time()-t0:.0f}초)")
 
 # 3. 감성 점수: ESG 기사만 (KR-FinBert-SC, s = P(긍정) − P(부정))
-import torch
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
-dev = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
-tok = AutoTokenizer.from_pretrained("snunlp/KR-FinBert-SC")
-mdl = AutoModelForSequenceClassification.from_pretrained("snunlp/KR-FinBert-SC").eval().to(dev)
-lab = {v.lower(): k for k, v in mdl.config.id2label.items()}
-e = x[x.esg != "무관"].drop_duplicates("id")[["id", "title", "body"]].copy()
-texts = (e.title.fillna("") + " " + e.body.fillna("").str[:200]).tolist()
-print(f"점수 매길 ESG 기사 {len(texts):,}건 | 장치 {dev}")
-S, t0, B = [], time.time(), 64
-for i in range(0, len(texts), B):
-    enc = tok(texts[i:i + B], padding=True, truncation=True, max_length=160, return_tensors="pt").to(dev)
-    with torch.no_grad():
-        p = torch.softmax(mdl(**enc).logits.float(), -1).cpu().numpy()
-    S.append(p[:, lab["positive"]] - p[:, lab["negative"]])
-    if (i // B) % 100 == 0:
-        print(f"  {min(i + B, len(texts)):,}/{len(texts):,}  {time.time()-t0:.0f}초", flush=True)
-e["s"] = np.concatenate(S) if S else []
-x = x.merge(e[["id", "s"]], on="id", how="left")
+if NO_SCORE:
+    print("--no-score: 감성 점수는 건너뜀 (ESG 부정·긍정 건수와 순지표만 계산)")
+    x["s"] = np.nan
+else:
+  import torch
+  from transformers import AutoTokenizer, AutoModelForSequenceClassification
+  dev = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
+  tok = AutoTokenizer.from_pretrained("snunlp/KR-FinBert-SC")
+  mdl = AutoModelForSequenceClassification.from_pretrained("snunlp/KR-FinBert-SC").eval().to(dev)
+  lab = {v.lower(): k for k, v in mdl.config.id2label.items()}
+  e = x[x.esg != "무관"].drop_duplicates("id")[["id", "title", "body"]].copy()
+  texts = (e.title.fillna("") + " " + e.body.fillna("").str[:200]).tolist()
+  print(f"점수 매길 ESG 기사 {len(texts):,}건 | 장치 {dev}")
+  S, t0, B = [], time.time(), 64
+  for i in range(0, len(texts), B):
+      enc = tok(texts[i:i + B], padding=True, truncation=True, max_length=160, return_tensors="pt").to(dev)
+      with torch.no_grad():
+          p = torch.softmax(mdl(**enc).logits.float(), -1).cpu().numpy()
+      S.append(p[:, lab["positive"]] - p[:, lab["negative"]])
+      if (i // B) % 100 == 0:
+          print(f"  {min(i + B, len(texts)):,}/{len(texts):,}  {time.time()-t0:.0f}초", flush=True)
+  e["s"] = np.concatenate(S) if S else []
+  x = x.merge(e[["id", "s"]], on="id", how="left")
 
 # 4. 월 배정 (그달 마지막 거래일 당일·이후 기사는 다음 달) → 회사×월
 last = (x.date + pd.offsets.BMonthEnd(0)).dt.normalize(); per = x.date.dt.to_period("M")
