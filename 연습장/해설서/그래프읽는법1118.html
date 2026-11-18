@@ -1,0 +1,102 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>그래프 읽는 법</title>
+<style>
+@font-face{font-family:NG;src:url("file:///usr/local/lib/python3.13/dist-packages/koreanize_matplotlib/fonts/NanumGothic.ttf");}
+@font-face{font-family:NG;font-weight:bold;src:url("file:///usr/local/lib/python3.13/dist-packages/koreanize_matplotlib/fonts/NanumGothicBold.ttf");}
+body{font-family:NG,sans-serif;font-size:10pt;line-height:1.68;color:#172B4D;}
+h1{font-size:19pt;margin:0 0 1mm;color:#1E4E8C;} .sub{color:#5A6B82;font-size:9.2pt;margin-bottom:4mm;}
+h2{font-size:13pt;color:#fff;background:#1E4E8C;padding:1.6mm 3mm;margin:8mm 0 3mm;page-break-after:avoid;}
+h3{font-size:11pt;color:#1E4E8C;border-bottom:1.5px solid #CBD8EA;padding-bottom:0.8mm;margin:5mm 0 1.5mm;page-break-after:avoid;}
+h4{font-size:10pt;color:#2F6FBF;margin:3mm 0 1mm;page-break-after:avoid;}
+table{border-collapse:collapse;width:100%;margin:2mm 0;font-size:9.1pt;page-break-inside:avoid;}
+th,td{border:1px solid #CBD8EA;padding:1.2mm 2mm;text-align:left;vertical-align:top;} th{background:#E9F0F9;}
+td.n{text-align:right;}
+.why{background:#F3F7FC;border-left:4px solid #2F6FBF;padding:2mm 3.5mm;margin:2mm 0;page-break-inside:avoid;}
+.why b{color:#1E4E8C;}
+.qa{border:1px solid #CBD8EA;border-radius:2mm;padding:2mm 3.5mm;margin:2mm 0;page-break-inside:avoid;}
+.qa .q{font-weight:bold;color:#C2611A;} .qa .a{margin-top:0.8mm;}
+.box{border:1px solid #CBD8EA;border-left:5px solid #1E4E8C;background:#F7FAFD;padding:2.5mm 4mm;margin:2.5mm 0;page-break-inside:avoid;}
+img{width:88%;display:block;margin:2mm auto;page-break-inside:avoid;}
+.pb{page-break-before:always;} .small{font-size:8.8pt;color:#5A6B82;}
+ol,ul{margin:1mm 0;padding-left:6mm;}
+.g{page-break-inside:avoid;margin-bottom:5mm;}
+.g img{width:92%;}
+.k{display:grid;grid-template-columns:24mm 1fr;border:1px solid #CBD8EA;border-radius:2mm;overflow:hidden;font-size:9.5pt;}
+.k div{padding:1.4mm 2.5mm;border-top:1px solid #E3EAF4;} .k .t{background:#F0F5FB;color:#1E4E8C;font-weight:bold;}
+.k div:nth-child(1),.k div:nth-child(2){border-top:none;}
+.say{background:#FFF7EE;border-left:4px solid #C2611A;padding:2mm 3.5mm;margin:2mm 0 0;font-size:9.6pt;}
+.say b{color:#C2611A;}
+ol.pt{margin:0;padding-left:5mm;}
+</style></head><body>
+
+</head><body>
+<h1>슬라이드별 그래프 읽는 법</h1><div class="sub">장마다: 무슨 그래프인지 → 축·색·표시 → 어디를 짚을지 → 이렇게 말하기 → 조심할 점 · 11/18</div>
+<div class="box"><b>공통으로 알아 둘 것 3개</b><ol><li><b>IC</b> = 예측 순위와 실제 수익률 순위의 상관. 0이면 못 맞힘, 주식에선 0.05면 쓸 만하고 0.09면 좋은 편.</li><li><b>t 2 이상(별표, 진한색)</b> = 우연이라 보기 어려움. t 2 미만은 "0과 구별 안 됨"이지 "반대"가 아님.</li><li><b>%p/월</b> = 한 달 수익률 차이. 1%p면 한 달에 1% 더 오른다는 뜻.</li></ol></div>
+<div class="g"><h3>4장 · 변수마다 힘이 센 시기가 다르다</h3>
+<img src="img_final/figM_quint_by_period.png">
+<p><b>무슨 그래프:</b> 9개 변수 각각, 그 변수가 큰 종목 20%와 작은 종목 20%의 다음 달 수익률 차이. 기간 3개로 나눔.</p>
+<div class="k"><div class="t">가로축</div><div>변수 9개 (베타 … 외국인 순매수)</div><div class="t">세로축</div><div>상위 20% − 하위 20% 다음 달 수익률 차이 (%p/월). 위로 갈수록 '그 변수가 큰 종목이 다음 달 더 오름', 아래면 '작은 종목이 더 오름'</div><div class="t">색</div><div>연회색 2001–10, 중간 파랑 2011–15, 진한 파랑 2016–21 (왼쪽→오른쪽 = 옛날→최근)</div><div class="t">별표 *</div><div>t 2 이상 = 우연이라 보기 어려움. 별 없는 막대는 '0과 구별 안 됨'</div></div>
+<p style="margin:2mm 0 1mm"><b>여기를 짚기 (순서대로)</b></p><ol class="pt"><li><b>규모</b>: 중간·진한 막대가 아래로 길고 별 → 2011년 이후 작은 회사가 더 오름(소형주 효과)</li><li><b>가치·변동성·주식 발행</b>: 연회색 막대에만 별 → 2010년 이전 효과, 최근엔 약해짐</li><li><b>모멘텀</b>: 앞 두 기간은 위(별), 진한 막대만 아래 → 2016년 이후 방향이 뒤집힘</li><li><b>개인 순매수</b>: 진한 막대가 위로 별 → 개인이 산 종목이 최근 다음 달 더 오름 (가설 H1과 반대)</li><li><b>외국인 순매수</b>: 막대가 다 작고 별 없음 → 효과 없음(H2)</li></ol>
+<div class="say"><b>이렇게 말하기</b><br>"막대는 변수가 큰 종목과 작은 종목의 다음 달 수익률 차이고, 색은 기간입니다. 규모를 보시면 2011년 이후 막대가 아래로 길어서 작은 회사 효과가 최근에 더 강해졌고, 가치·변동성·발행은 연회색에만 별이 있어 2010년 이전 효과입니다. 이렇게 시기마다 효과가 달라서, 다음 장에서 오래된 데이터도 같이 학습하는 게 낫다는 결과로 이어집니다."</div>
+<p class="small" style="margin-top:1.5mm">⚠ 막대 높이는 '수익률' 자체가 아니라 두 그룹의 '차이'다. 별이 없다고 효과가 반대라는 뜻이 아니라 '확실하지 않다'는 뜻.</p></div>
+<div class="g"><h3>5장 · 오래된 데이터도 쓰는 편이 낫다</h3>
+<img src="img_final/figN_rolling.png">
+<p><b>무슨 그래프:</b> 학습 기간을 4가지로 바꿔 가며 같은 모델을 돌렸을 때 예측력(IC).</p>
+<div class="k"><div class="t">가로축</div><div>변수를 넣는 단계 4개: 기준선(베타·규모·가치) → +통제(반전·모멘텀) → +보강(변동성·발행) → +수급(개인·외국인)</div><div class="t">세로축</div><div>평균 IC (2011–2021). 예측 순위와 실제 순위의 상관, 높을수록 잘 맞힘</div><div class="t">색 4개</div><div>진한 파랑 = 2001년부터 전부(확장), 그다음 최근 10년, 7년, 5년만(롤링). 진할수록 데이터가 많음</div></div>
+<p style="margin:2mm 0 1mm"><b>여기를 짚기 (순서대로)</b></p><ol class="pt"><li>각 묶음에서 <b>맨 왼쪽 진한 막대가 항상 제일 높다</b> → 데이터를 다 쓰는 게 가장 좋음</li><li>각 묶음에서 <b>오른쪽(회색, 5년)으로 갈수록 낮아짐</b> → 줄일수록 나빠짐</li><li>묶음이 <b>오른쪽으로 갈수록 전체가 높아짐</b> → 변수를 추가할 때마다 예측력이 오름 (어떤 학습 방식이든 같음)</li></ol>
+<div class="say"><b>이렇게 말하기</b><br>"각 묶음의 네 막대는 학습 기간입니다. 진한 막대가 2001년부터 전부 쓴 것이고, 오른쪽으로 갈수록 최근 몇 년만 쓴 겁니다. 네 단계 모두 진한 막대가 가장 높습니다. 수급 단계에서 0.091, 5년만 쓰면 0.082입니다. 오래된 데이터를 빼서 좋아진 경우는 없어서 지금 방식을 유지합니다."</div>
+<p class="small" style="margin-top:1.5mm">⚠ 10년(0.090)과 확장(0.091)은 거의 같다. '확장이 압도적'이 아니라 '줄여서 좋아지는 건 없다'로 말할 것.</p></div>
+<div class="g"><h3>6장 · XGBoost와 FM의 방향이 같다</h3>
+<img src="img_final/figK_shap_dependence.png">
+<p><b>무슨 그래프:</b> XGBoost가 각 변수를 어느 방향으로 썼는지. 변수 값을 10등분해서, 각 구간이 예측을 얼마나 올렸는지(파랑)·내렸는지(주황).</p>
+<div class="k"><div class="t">작은 그림 9개</div><div>변수 하나씩. 제목 옆 '중요도'가 클수록 예측에 많이 쓰인 변수 (변동성 1.35가 1등, 베타 0.30이 꼴찌)</div><div class="t">가로축</div><div>그 변수 값이 낮은 종목(왼쪽) → 높은 종목(오른쪽), 10칸</div><div class="t">세로축</div><div>예측 순위에 더한 값(SHAP). 0보다 위 = 예측을 올림, 아래 = 내림</div><div class="t">색</div><div>파랑 = 올림, 주황 = 내림</div></div>
+<p style="margin:2mm 0 1mm"><b>여기를 짚기 (순서대로)</b></p><ol class="pt"><li><b>변동성</b>: 왼쪽 파랑 → 오른쪽 주황 = '변동성 클수록 불리'. FM 부호(−)와 같음</li><li><b>모멘텀·가치</b>: 왼쪽 주황 → 오른쪽 파랑 = '클수록 유리'</li><li><b>규모</b>: 맨 왼쪽 한 칸만 큰 파랑, 나머지 평평 = '아주 작은 10% 회사만 특별'</li><li><b>개인 순매수</b>: 오른쪽이 파랑 = 개인이 많이 산 종목을 유리하게 봄 (H1과 반대, FM과 같음)</li></ol>
+<div class="say"><b>이렇게 말하기</b><br>"작은 그림 하나가 변수 하나입니다. 왼쪽이 값이 작은 종목, 오른쪽이 큰 종목이고, 파랑은 XGBoost가 예측을 올린 것, 주황은 내린 것입니다. 변동성을 보면 왼쪽은 파랑, 오른쪽은 주황이라 변동성이 클수록 불리하게 봤고, FM 결과와 같습니다. 9개 변수 모두 FM과 방향이 같았습니다. 규모는 가장 작은 10%에서만 크게 올려서, 소형주 효과가 아주 작은 회사에 몰려 있다는 것도 보입니다."</div>
+<p class="small" style="margin-top:1.5mm">⚠ SHAP은 '유의한가'가 아니라 '어느 방향으로 얼마나 썼나'다. 유의성은 FM t로 말할 것.</p></div>
+<div class="g"><h3>7장 · XGBoost가 11년 중 9년 더 잘 맞혔다</h3>
+<img src="img_final/figL_fm_vs_xgb.png">
+<p><b>무슨 그래프:</b> 같은 9개 변수로 FM(직선 모델)과 XGBoost가 해마다 얼마나 잘 맞혔는지.</p>
+<div class="k"><div class="t">가로축</div><div>연도 2011–2021</div><div class="t">세로축</div><div>그해 평균 IC (높을수록 잘 맞힘)</div><div class="t">색</div><div>회색 = FM 예측, 파랑 = XGBoost 예측. 범례에 11년 평균(0.077, 0.091)</div></div>
+<p style="margin:2mm 0 1mm"><b>여기를 짚기 (순서대로)</b></p><ol class="pt"><li>대부분 해에서 <b>파랑이 회색보다 높다</b> (11년 중 9년)</li><li><b>2014, 2015</b>만 회색이 더 높다 → XGBoost가 항상 이기는 건 아님</li><li><b>2017</b>: FM은 거의 0, XGBoost는 0.067 → 차이가 가장 큰 해 중 하나</li><li>회색도 대부분 0.06~0.13 → 직선 모델만으로도 꽤 맞힌다(평균의 85%)</li></ol>
+<div class="say"><b>이렇게 말하기</b><br>"회색이 FM, 파랑이 XGBoost입니다. 같은 변수, 같은 조건으로 예측하게 했고, 11년 중 9년 XGBoost가 높았습니다. 평균은 0.077 대 0.091입니다. 차이가 통계적으로 확실하다고 할 정도(t 1.6)는 아니지만 꾸준히 앞서서 XGBoost를 최종 모델로 씁니다. 직선 모델만으로도 85%는 나온다는 점도 같이 말씀드립니다."</div>
+<p class="small" style="margin-top:1.5mm">⚠ 'XGBoost가 확실히 낫다'고 말하지 말 것. '꾸준히 조금 낫다'가 정확.</p></div>
+<div class="g"><h3>8장 · 뉴스 데이터 만들기</h3>
+<img src="img_final/f1_funnel_v12.png">
+<p><b>무슨 그래프:</b> 기사가 정리 단계마다 몇 건 남았는지.</p>
+<div class="k"><div class="t">가로 막대</div><div>길이 = 기사 수</div><div class="t">위 → 아래</div><div>제목에 회사 이름이 있는 기사 → 정리 후 최종 → 그중 ESG 부정 → ESG 긍정</div></div>
+<p style="margin:2mm 0 1mm"><b>여기를 짚기 (순서대로)</b></p><ol class="pt"><li><b>162만 → 129만</b>: 잘못 붙은 기사('SK텔'이 SK에 붙는 등)와 중복을 걸러낸 결과</li><li><b>ESG 부정 4만 2,517 / 긍정 3만 8,467</b>: 전체의 약 6%만 ESG (규칙 v1.2 기준)</li></ol>
+<div class="say"><b>이렇게 말하기</b><br>"빅카인즈에서 받은 기사 중 제목에 회사 이름이 있는 게 약 162만 건이고, 잘못 붙은 기사를 걸러 129만 건이 남았습니다. 그중 ESG 부정이 4만 2천, 긍정이 3만 8천 건입니다. 아래 카드 세 개가 정리하면서 고친 문제들입니다."</div>
+<p class="small" style="margin-top:1.5mm">⚠ ESG가 6%뿐인 건 정상(교수님이 좁히라고 하신 것). 4만 건이면 판정에는 충분.</p></div>
+<div class="g"><h3>9장 · 감성 점수는 2015년까지 다음 달도 맞혔고, 2016년부터는 못 맞힌다</h3>
+<img src="img_final/f9_sent_full.png">
+<p><b>무슨 그래프:</b> 왼쪽: 감성 점수가 수익률과 얼마나 같이 움직이나. 오른쪽: 다른 변수를 다 통제해도 감성이 다음 달 수익률을 설명하나, 기간별.</p>
+<div class="k"><div class="t">왼쪽 세로축</div><div>IC (감성 점수 순위와 수익률 순위의 상관)</div><div class="t">왼쪽 막대</div><div>같은 달 / 다음 달 / 2달 뒤 수익률과의 상관. 위에 숫자와 t</div><div class="t">오른쪽 세로축</div><div>FM 계수 = 감성이 좋은 쪽 종목이 다음 달 몇 %p 더 오르나 (다른 9개 변수 통제)</div><div class="t">오른쪽 색</div><div>진한 파랑 = t 2 이상(확실), 연회색 = 확실하지 않음</div></div>
+<p style="margin:2mm 0 1mm"><b>여기를 짚기 (순서대로)</b></p><ol class="pt"><li><b>왼쪽 첫 막대(같은 달 0.180, t 28)</b>가 압도적 → 점수가 기사를 제대로 읽는다</li><li><b>왼쪽 둘째 막대(다음 달 0.018)</b>는 작지만 t 2.6</li><li><b>오른쪽 진한 두 막대</b>: 2002–10, 2011–15엔 한 달 약 1%p, t 3 안팎</li><li><b>오른쪽 회색 막대</b>: 2016–21엔 0 아래, 유의하지 않음 → 효과가 사라짐</li></ol>
+<div class="say"><b>이렇게 말하기</b><br>"왼쪽은 감성 점수와 수익률의 상관입니다. 같은 달은 0.18로 매우 강해서 점수가 기사를 제대로 읽는다는 건 확인됩니다. 다음 달은 작지만 21년 전체로는 유의합니다. 그런데 오른쪽처럼 기간을 나누면, 다른 변수를 다 통제해도 2015년까지는 좋은 기사가 난 종목이 다음 달 한 달 1%p쯤 더 올랐지만, 2016년부터는 사라졌습니다. 그래서 지금 모델에는 넣지 않습니다."</div>
+<p class="small" style="margin-top:1.5mm">⚠ 처음 일부 데이터(52개 파일)로는 '다음 달 0'이었다. 효과가 작아서 전체 데이터로 봐야 보였다는 점을 물으면 답할 것.</p></div>
+<div class="g"><h3>10장 · 유형 5개는 사람끼리도 62%만 같았다</h3>
+<p><b>무슨 그래프:</b> 그래프 없이 큰 숫자 3개와 의견이 갈린 기사 표.</p>
+<div class="k"><div class="t">62%</div><div>예원·아영 두 사람이 서로 안 보고 단 답이 같은 비율</div><div class="t">69%</div><div>키워드 규칙이 최종 정답과 맞은 비율. 기준은 80%</div><div class="t">44%</div><div>규칙이 '화제형'이라 한 것 중 진짜 화제형 비율 (H3의 핵심 유형)</div><div class="t">표</div><div>사람끼리 답이 갈린 기사와 왜 애매했는지</div></div>
+<p style="margin:2mm 0 1mm"><b>여기를 짚기 (순서대로)</b></p><ol class="pt"><li><b>62%</b>부터: 사람끼리도 이 정도면 정의가 애매하다는 뜻</li><li>표 첫 줄 'ELS 출시': 홍보(광고)인지 새 사업(화제)인지 사람도 갈림</li></ol>
+<div class="say"><b>이렇게 말하기</b><br>"기사를 유형 5개로 나누는 규칙을 사람 정답 100건으로 시험했습니다. 두 사람끼리도 62%만 같았고, 규칙은 69%로 기준 80%에 못 미쳤습니다. 표처럼 신상품 출시가 홍보인지 사업 소식인지 사람도 갈려서, 규칙보다 정의 자체가 문제였습니다."</div>
+<p class="small" style="margin-top:1.5mm">⚠ 79%(오류 수정 후)는 같은 100건으로 다시 잰 값이라 참고용.</p></div>
+<div class="g"><h3>12장 · 범위를 좁히자 기준 80%를 넘었다</h3>
+<img src="img_final/f2_classify.png">
+<p><b>무슨 그래프:</b> 1차 시험(유형 5개)과 2차 시험(ESG 3개)의 성적 비교.</p>
+<div class="k"><div class="t">가로축</div><div>세 가지 성적: 사람끼리 같은 답 / 규칙 정확도(처음) / 규칙 정확도(오류 수정 후)</div><div class="t">색</div><div>회색 = 1차 유형 5개, 파랑 = 2차 ESG 3개</div><div class="t">주황 점선</div><div>통과 기준 80% (규칙 정확도에 적용)</div></div>
+<p style="margin:2mm 0 1mm"><b>여기를 짚기 (순서대로)</b></p><ol class="pt"><li><b>가운데 묶음</b>이 핵심: 회색 69%는 점선 아래, 파랑 83%는 점선 위 → 통과</li><li><b>왼쪽 묶음</b>: 사람끼리도 62% → 78%로 올라감 = ESG가 훨씬 명확한 기준</li><li><b>오른쪽 묶음</b> 90%: 같은 기사로 다시 잰 값이라 참고용</li></ol>
+<div class="say"><b>이렇게 말하기</b><br>"회색이 처음 유형 5개, 파랑이 ESG 3개입니다. 같은 방식으로 시험했는데, 사람끼리 일치가 62%에서 78%로 오르고, 규칙 정확도는 처음부터 83%로 기준 80%를 넘었습니다. 통과 판단은 이 83%로 했습니다."</div>
+<p class="small" style="margin-top:1.5mm">⚠ 사람끼리 78%는 점선보다 살짝 아래지만, 80% 기준은 '규칙 정확도'에 대한 것이다. 오른쪽 90%를 통과 근거로 말하지 말 것.</p></div>
+<div class="g"><h3>13장 · 보험사 이름 속 '화재' 오류를 고쳤다</h3>
+<p><b>무슨 그래프:</b> 그래프 없이 표 1개와 카드 2개.</p>
+<div class="k"><div class="t">표 1줄</div><div>일반 기사에서 규칙과 FinBERT가 같은 방향으로 본 비율 (부정 68%, 긍정 59%)</div><div class="t">표 2줄</div><div>엇갈린 부정 37건 중 30건이 규칙 오류: 보험사 이름 16, 단어 일부 14</div><div class="t">표 3줄</div><div>전체에서 부정 판정의 15%가 보험사 6곳</div><div class="t">표 4줄</div><div>규칙 v1.2로 고쳐서 사람 정답 정확도 90% → 91%</div><div class="t">카드</div><div>다시 분류한 결과 / 결론은 그대로</div></div>
+<p style="margin:2mm 0 1mm"><b>여기를 짚기 (순서대로)</b></p><ol class="pt"><li><b>표 2·3줄</b>이 핵심: 오류 원인과 그 크기</li><li><b>오른쪽 카드</b>: 고친 뒤에도 결론은 같다</li></ol>
+<div class="say"><b>이렇게 말하기</b><br>"12장 시험은 ESG 기사가 많은 시험지라 일반 기사의 오류는 잘 안 보였습니다. 이안님이 일반 기사 5천 건에 규칙과 감성 모델을 같이 돌려 보니, 메리츠화재처럼 회사 이름에 '화재'가 든 보험사 기사가 부정으로 잡히고 있었고, 전체 부정 판정의 15%였습니다. 규칙을 고치니 사람 정답 정확도는 오히려 올랐고, 다시 분류해서 판정해도 결론은 같았습니다."</div>
+<p class="small" style="margin-top:1.5mm">⚠ 결과를 보고 규칙을 고친 게 아니라 기사를 직접 읽어 찾은 오류라는 점을 말할 것.</p></div>
+<div class="g"><h3>14장 · ESG 기사도 다음 달 수익률은 못 맞힌다</h3>
+<img src="img_final/f4_esg_v12.png">
+<p><b>무슨 그래프:</b> ESG 부정·긍정 기사가 있는 종목과 없는 종목의 수익률 차이를, 기사가 나온 달부터 3달 뒤까지.</p>
+<div class="k"><div class="t">가로축</div><div>기사가 나온 달(같은 달), 다음 달, 2달 뒤, 3달 뒤</div><div class="t">세로축</div><div>있는 종목 − 없는 종목 수익률 차이 (%p)</div><div class="t">색</div><div>주황 = 부정 ESG 기사 있는 종목, 파랑 = 긍정</div><div class="t">세로선</div><div>오차 범위(±2 표준오차). <b>세로선이 0을 가로지르면 유의하지 않음</b></div></div>
+<p style="margin:2mm 0 1mm"><b>여기를 짚기 (순서대로)</b></p><ol class="pt"><li><b>다음 달 주황 막대</b>(가설 H3'의 핵심): 아래로 조금(−0.16)이지만 세로선이 0을 지남 → 차이 없음</li><li><b>같은 달 파랑 막대</b>만 세로선 전체가 0 위 → 긍정 기사는 같은 달에만 수익률이 높음</li><li><b>2·3달 뒤</b>: 막대가 위지만 세로선이 0을 지남 → 유의하지 않음, 방향도 가설과 반대</li></ol>
+<div class="say"><b>이렇게 말하기</b><br>"주황이 부정 ESG, 파랑이 긍정 ESG 기사가 있는 종목입니다. 세로선이 0을 넘어가면 유의하지 않은 겁니다. 가설의 핵심인 다음 달 주황 막대는 조금 아래지만 세로선이 0을 지나서 차이가 없습니다. 긍정 기사는 같은 달에만 높았는데, 다른 변수를 통제하면 사라집니다. 그래서 H3', H4' 모두 지지되지 않았습니다."</div>
+<p class="small" style="margin-top:1.5mm">⚠ 같은 달 긍정 +0.51은 '홍보하면 오른다'가 아니라 큰 회사·좋은 시기에 홍보가 많은 것(통제하면 사라짐).</p></div>
+<p class="small">2·3·11·15·16장은 그래프가 없는 표·카드 장이라 「장별 흐름 해설」 참고.</p></body></html>
