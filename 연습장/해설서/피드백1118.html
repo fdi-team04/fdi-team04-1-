@@ -1,0 +1,89 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>11/18 피드백</title><style>
+@font-face{font-family:NG;src:url("file:///usr/local/lib/python3.13/dist-packages/koreanize_matplotlib/fonts/NanumGothic.ttf");}
+@font-face{font-family:NG;font-weight:bold;src:url("file:///usr/local/lib/python3.13/dist-packages/koreanize_matplotlib/fonts/NanumGothicBold.ttf");}
+body{font-family:NG,sans-serif;font-size:10pt;line-height:1.68;color:#172B4D;}
+h1{font-size:19pt;margin:0 0 1mm;color:#1E4E8C;} .sub{color:#5A6B82;font-size:9.2pt;margin-bottom:4mm;}
+h2{font-size:13pt;color:#fff;background:#1E4E8C;padding:1.6mm 3mm;margin:8mm 0 3mm;page-break-after:avoid;}
+h3{font-size:11pt;color:#1E4E8C;border-bottom:1.5px solid #CBD8EA;padding-bottom:0.8mm;margin:5mm 0 1.5mm;page-break-after:avoid;}
+h4{font-size:10pt;color:#2F6FBF;margin:3mm 0 1mm;page-break-after:avoid;}
+table{border-collapse:collapse;width:100%;margin:2mm 0;font-size:9.1pt;page-break-inside:avoid;}
+th,td{border:1px solid #CBD8EA;padding:1.2mm 2mm;text-align:left;vertical-align:top;} th{background:#E9F0F9;}
+td.n{text-align:right;}
+.why{background:#F3F7FC;border-left:4px solid #2F6FBF;padding:2mm 3.5mm;margin:2mm 0;page-break-inside:avoid;}
+.why b{color:#1E4E8C;}
+.qa{border:1px solid #CBD8EA;border-radius:2mm;padding:2mm 3.5mm;margin:2mm 0;page-break-inside:avoid;}
+.qa .q{font-weight:bold;color:#C2611A;} .qa .a{margin-top:0.8mm;}
+.box{border:1px solid #CBD8EA;border-left:5px solid #1E4E8C;background:#F7FAFD;padding:2.5mm 4mm;margin:2.5mm 0;page-break-inside:avoid;}
+img{width:88%;display:block;margin:2mm auto;page-break-inside:avoid;}
+.pb{page-break-before:always;} .small{font-size:8.8pt;color:#5A6B82;}
+ol,ul{margin:1mm 0;padding-left:6mm;}
+.q{color:#C2611A;font-weight:bold} .unc{color:#8A6D00;font-size:8.8pt}
+</style></head><body>
+</head><body>
+<h1>11/18 교수님 피드백 정리</h1>
+<div class="sub">녹취 기반 정리 · 녹취가 깨진 부분은 <span class="unc">(?) 추정</span>으로 표시 → 팀원 기억과 맞춰 확인 필요</div>
+
+<div class="box"><b>한 장 요약</b>
+<ol>
+<li><b>발표 방식</b>: 3분 제한 의식, 중요한 곳에 시간 몰기, 예시·표는 꼭 필요한 것만, 청중에 따라 내용 다르게.</li>
+<li><b>SHAP 장</b>: "FM과 방향이 같다"를 왜 보여 주는지 이유가 안 보인다.</li>
+<li><b>80% 기준</b>: 근거가 뭐냐 → 중간 결정과 그 이유를 계획서에 남겨라.</li>
+<li><b>ESG 분류</b>: 단어 필터 대신 임베딩을 써 보는 게 맞을 것 같다. 어느 쪽이든 고른 이유가 있어야 한다.</li>
+<li><b>다음 단계(논란형 기사)</b>: 드문 극단 사례를 먼저 세어 보고, 한 명이 맡아 진행하라.</li>
+</ol></div>
+
+<h2>1. 발표 방식</h2>
+<table>
+<tr><th style="width:24%">지적</th><th>내용</th></tr>
+<tr><td>시간 배분</td><td>3분 제한을 신경 안 쓴 것 같다. 모든 장을 같은 길이로 말하지 말고 <b>제일 중요한 부분에 시간을 쓰고 나머지는 짧게</b>.</td></tr>
+<tr><td>줄이는 법</td><td>정형은 "변수마다 힘이 센 시기가 다르더라 → 데이터를 길게 쓰는 게 낫더라" 정도로 짧게. 회사 이름 매칭 같은 예시는 다 말할 필요 없음. 짧게 넘긴 건 질문이 오면 설명.</td></tr>
+<tr><td>표</td><td>꼭 설명해야 하는 표와 아닌 표를 구분.</td></tr>
+<tr><td>청중</td><td>지도 교수님, 학생들, 다른 교수님(박종혁 교수님 언급)께 할 말이 달라야 한다. 대상이 누구인지 고민.</td></tr>
+<tr><td>뉴스 파트 요약 예시<br>(교수님이 직접)</td><td>① 제목에 회사 이름이 있는 기사로 회사를 정했다 ② 이름이 바뀐 회사는 처리했다 ③ 같은 달엔 의미가 있지만 다음 달엔 없다 ④ 그래서 이건 안 쓰겠다.</td></tr>
+</table>
+
+<h2>2. SHAP 장 (6장): "왜 이걸 보여 주는지 모르겠다"</h2>
+<div class="why"><b>말씀:</b> 두 모델의 방향이 같은 게 왜 중요한지 이유가 안 보인다. 맞다 틀리다가 아니라 <b>보여 주는 이유가 있어야 한다</b>. 차라리 가설 판정에 필요한 <b>변수별 방향이 어떻게 나왔는지</b>를 보여 주는 게 낫다는 뉘앙스.<br>
+<b>대응:</b> "XGBoost는 방향을 말해 주지 않는다 → 가설(개인 −, 외국인 +)을 판정하려면 방향이 필요했다 → SHAP으로 보니 개인은 가설과 반대(+), 외국인은 효과 없음" 순서로, <b>가설 판정을 앞에</b> 둔다. "FM과 같다"는 착시가 아니라는 보조 근거로 한 줄만.</div>
+
+<h2>3. 분류 기준 80%: "근거가 뭐냐"</h2>
+<div class="why"><b>말씀:</b> 80% 기준의 근거와 "얼마 차이면 된다는 건지"를 물으심. 발표에서는 답을 못 함.<br>
+<span class="unc">(?) 추정:</span> 진행하다 보면 이렇게 <b>중간에 결정해야 할 것들이 생기고, 그 결정과 이유를 계획서에 남겨야 한다</b>. 그래서 범위를 좁히라고 한 것.<br>
+<b>답변 준비:</b> ① 내용 분석 연구에서 흔히 쓰는 80% 기준을 결과 보기 전에 정함 ② 오분류가 많으면 효과가 0 쪽으로 묽어져서 '효과 없음'이 분류 탓인지 구분 불가(실제로 보험사 오류를 고치니 효과가 −0.08 → −0.16%p) ③ 사람끼리 일치도 78% 수준이라 규칙이 사람만큼은 맞혀야 함.</div>
+
+<h2>4. ESG 분류 방식: "임베딩을 써 보는 게 맞을 것 같다"</h2>
+<div class="why"><b>말씀:</b> '화재' 오류(보험사 이름)는 단어 필터링이라 생긴 것. <b>이왕이면 임베딩(문장 의미를 숫자로 바꾼 것)을 써 보라</b>. 최종 분류가 FinBERT 임베딩인지 단어 조합인지 물으심.<br>
+<b>우리 답:</b> 단어 조합으로 분류하고, FinBERT는 확신도 보조.<br>
+<b>교수님:</b> 임베딩을 잘 쓰면 '화재' 같은 문제는 신경 안 써도 될 것. <b>어느 쪽을 써도 상관없지만 고른 이유가 있어야 한다.</b><br>
+<b>대응:</b> FinBERT 임베딩 분류와 단어 규칙을 같은 사람 정답 100건으로 비교 → 정확도와 오류 유형을 근거로 선택 이유를 남김.</div>
+
+<h2>5. 다음 단계: 논란형 기사</h2>
+<div class="why"><b>우리 계획:</b> ESG로 좁힌 방향은 좋았지만 가설이 지지 안 됐으니, '논란형 기사'로 다시 해 볼지 고민 중.<br>
+<b>교수님:</b>
+<ul>
+<li>그 아이디어에는 <b>"기사 효과가 한 달 이상 가는 경우가 있다"는 전제</b>가 깔려 있다.</li>
+<li>진짜 논란은 100개 중 1개 정도로 드물 것. <b>극단 사례를 딱 잡아서</b> 실제로 몇 개나 있는지, 모델에 반영할 만한지 먼저 찍어 봐라.</li>
+<li>시간이 많지 않으니 <b>어디까지 할지 정하고, 한 명이 맡아 진행</b>. 나머지는 다른 일. 다 같이 몰려가면 비효율적.</li>
+<li><span class="unc">(?) 추정:</span> 쉽게 확인되는 것부터 찾고 나서 깊게 들어가는 순서가 맞다.</li>
+<li><span class="unc">(?) 추정:</span> 다음 달이 아니라 3개월·1년 같은 더 긴 기간에서 효과가 보일 수도 있다.</li>
+</ul></div>
+
+<h2>6. 기타 (녹취 깨짐, 확인 필요)</h2>
+<table>
+<tr><th style="width:24%">항목</th><th>추정 내용</th></tr>
+<tr><td>선행 사례 <span class="unc">(?)</span></td><td>텍스트 데이터 증강(augmentation)이나 비슷한 접근의 선행 사례가 있을 것 같으니, 시계열 말고 그쪽을 찾아 참고해 보라.</td></tr>
+<tr><td>매주 업데이트 <span class="unc">(?)</span></td><td>앞으로 매주 진행 상황을 업데이트하고 보여 줘야 한다.</td></tr>
+<tr><td>다른 팀원 발표</td><td>베이스라인 모델: 개인·외국인 거래량 변수 영향이 크게 나옴. 기본 모델에 뉴스 변수를 넣으면 정확도가 떨어짐. 마지막에 "종목별 거래량 말고 매크로 지표를 쓰면?" 질문 중 녹취 끊김.</td></tr>
+</table>
+
+<h2>7. 바로 할 일</h2>
+<table>
+<tr><th style="width:22%">할 일</th><th>내용</th><th style="width:16%">관련 피드백</th></tr>
+<tr><td>발표 다듬기</td><td>장마다 "꼭 말할 것 한 줄"만 남기고 나머지는 질문용. 중요한 장(감성 2015/2016, ESG 결과)에 시간 몰기. 청중별로 강조점 정하기</td><td>1</td></tr>
+<tr><td>6장 고치기</td><td>"방향이 같다"가 아니라 "가설 판정에 방향이 필요했다 → 결과"로</td><td>2</td></tr>
+<tr><td>80% 근거 기록</td><td>답변 문장 준비, 계획서에 결정 이유 기록</td><td>3</td></tr>
+<tr><td>임베딩 비교</td><td>FinBERT 임베딩 분류 vs 단어 규칙을 사람 정답 100건으로 비교 → 선택 이유</td><td>4</td></tr>
+<tr><td>논란형 (한 명 담당)</td><td>① 한 달 넘게 보도가 이어진 큰 사건이 몇 개인지 먼저 세기 ② 몇 개 안 되면 사건 연구(이벤트 스터디)로 따로 보기 ③ 3개월·1년 기간도 확인</td><td>5</td></tr>
+<tr><td>확인</td><td>(?) 표시 부분을 팀원 기억과 맞추기</td><td>6</td></tr>
+</table>
+</body></html>
