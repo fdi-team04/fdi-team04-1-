@@ -1,0 +1,92 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>데이터 파일 지도</title><style>
+@font-face{font-family:NG;src:url("file:///usr/local/lib/python3.13/dist-packages/koreanize_matplotlib/fonts/NanumGothic.ttf");}
+@font-face{font-family:NG;font-weight:bold;src:url("file:///usr/local/lib/python3.13/dist-packages/koreanize_matplotlib/fonts/NanumGothicBold.ttf");}
+body{font-family:NG,sans-serif;font-size:10pt;line-height:1.68;color:#172B4D;}
+h1{font-size:19pt;margin:0 0 1mm;color:#1E4E8C;} .sub{color:#5A6B82;font-size:9.2pt;margin-bottom:4mm;}
+h2{font-size:13pt;color:#fff;background:#1E4E8C;padding:1.6mm 3mm;margin:8mm 0 3mm;page-break-after:avoid;}
+h3{font-size:11pt;color:#1E4E8C;border-bottom:1.5px solid #CBD8EA;padding-bottom:0.8mm;margin:5mm 0 1.5mm;page-break-after:avoid;}
+h4{font-size:10pt;color:#2F6FBF;margin:3mm 0 1mm;page-break-after:avoid;}
+table{border-collapse:collapse;width:100%;margin:2mm 0;font-size:9.1pt;page-break-inside:avoid;}
+th,td{border:1px solid #CBD8EA;padding:1.2mm 2mm;text-align:left;vertical-align:top;} th{background:#E9F0F9;}
+td.n{text-align:right;}
+.why{background:#F3F7FC;border-left:4px solid #2F6FBF;padding:2mm 3.5mm;margin:2mm 0;page-break-inside:avoid;}
+.why b{color:#1E4E8C;}
+.qa{border:1px solid #CBD8EA;border-radius:2mm;padding:2mm 3.5mm;margin:2mm 0;page-break-inside:avoid;}
+.qa .q{font-weight:bold;color:#C2611A;} .qa .a{margin-top:0.8mm;}
+.box{border:1px solid #CBD8EA;border-left:5px solid #1E4E8C;background:#F7FAFD;padding:2.5mm 4mm;margin:2.5mm 0;page-break-inside:avoid;}
+img{width:88%;display:block;margin:2mm auto;page-break-inside:avoid;}
+.pb{page-break-before:always;} .small{font-size:8.8pt;color:#5A6B82;}
+ol,ul{margin:1mm 0;padding-left:6mm;}
+code{font-size:8.6pt;background:#F0F4FA;padding:0 1mm;border-radius:1mm} td code{word-break:break-all} .flow{font-family:NG;font-size:9pt;background:#F7FAFD;border:1px solid #CBD8EA;padding:3mm;white-space:pre;line-height:1.6}
+</style></head><body>
+</head><body><h1>4팀 데이터·파일 지도</h1>
+<div class="sub">11/18 브리핑까지 어떤 파일로, 어떤 코드를 돌려, 어떤 숫자가 나왔는지 · 깃 브랜치 <code>claude/gracious-fermat-5vr5w2</code>의 <code>연습장/</code> 기준 · 11/18</div>
+
+<div class="box"><b>결론부터: 최종으로 쓰는 원본은 2개</b>
+<table>
+<tr><th style="width:14%">구분</th><th>파일</th><th style="width:24%">어디에</th><th style="width:26%">쓰인 슬라이드</th></tr>
+<tr><td><b>정형</b></td><td><code>final_structured_data_raw.csv</code> (예원 정리본, 결측 처리 안 한 것)</td><td>드라이브 final 폴더 (정형)</td><td>4~7장 전부, 9·14장의 수익률·통제 변수</td></tr>
+<tr><td><b>비정형</b></td><td><code>articles_clean.csv</code> (아영 정리본, 129만 1,011건, 시총 상위 200, 옛 이름 기사 포함)</td><td>아영 드라이브 (기사 원문이라 깃에 안 올림)</td><td>8·9·13·14장</td></tr>
+</table>
+비정형은 원문이 크고 공개하면 안 돼서, 영섭 컴퓨터·코랩에서 <b>회사×월로 센 파일 2개</b>로 줄였고 그 둘은 깃에 있음: <code>out/news_esg_v12_input.csv</code>(ESG 개수, 규칙 v1.2), <code>out_yw/news_sent_full/sent_monthly_input.csv</code>(감성 점수).</div>
+
+<h2>1. 전체 흐름</h2>
+<div class="flow">[정형]  final_structured_data_raw.csv (예원)
+          │  yw_run/step1_build_features_yw.py  (변수 9개 + 다음 달 수익률로 정리)
+          ▼
+        out_yw/features.parquet  ← 정형·뉴스 분석 전부 이 파일을 읽음 (깃에는 없음, step1로 다시 만듦)
+          ├ step2_preview.py      → 5분위·원시 IC 미리보기
+          ├ step3_xgb_stages.py   → 단계별 XGBoost IC (0.050→0.077→0.089→0.091)
+          ├ step4_fm_h1h2.py      → Fama-MacBeth, H1·H2
+          ├ step14_period_quint.py→ 4장 기간별 5분위 / 5장 그림
+          ├ step13_rolling.py     → 5장 확장 vs 롤링
+          └ step12_explain.py     → 6장 SHAP, 7장 FM vs XGBoost
+
+[비정형] 빅카인즈 xlsx (드라이브, 원문)
+          │  아영 정리: company_list_최종.csv + match_rules.py + 아영_정리보정.py + 옛 이름 재수집 합치기
+          ▼
+        articles_clean.csv (129만 건, 아영 드라이브)
+          ├ esg_rules.py(v1.2) + 영섭_ESG_VSCode.py --no-score  (영섭 PC) → esg_monthly.csv
+          │      → out/news_esg_v12_input.csv → yw_run/esg_analysis_yw.py, esg_v12_fig.py → 14장
+          └ 영섭_감성전체.py (코랩 GPU, KR-FinBert-SC) → sent_monthly.csv
+                 → out_yw/news_sent_full/sent_monthly_input.csv
+                 → yw_run/sent_analysis_yw.py, sent_fm_period.py, sent_fig9.py, sent_extra_yw.py, sent_fig_h3h4.py → 9장</div>
+
+<h2>2. 슬라이드별: 입력 → 코드 → 결과 파일 → 핵심 숫자</h2>
+<table>
+<tr><th style="width:9%">장</th><th style="width:19%">입력</th><th style="width:22%">코드 (연습장/)</th><th style="width:24%">결과 파일</th><th>핵심 숫자</th></tr>
+<tr><td>4장 기간별</td><td>features.parquet</td><td><code>yw_run/step14_period_quint.py</code></td><td><code>out_yw/quint_by_period.csv</code>, <code>figM_quint_by_period.png</code></td><td>규모 2011년 이후 −2.3·−1.9%p*, 가치·변동성·발행은 2010년 이전, 개인 +0.71*(2016–21)</td></tr>
+<tr><td>5장 학습 기간</td><td>features.parquet</td><td><code>yw_run/step13_rolling.py</code> (그림은 step14)</td><td><code>out_yw/rolling_vs_expanding.csv</code>, <code>figN_rolling.png</code></td><td>확장 0.091 / 10년 0.090 / 7년 0.088 / 5년 0.082</td></tr>
+<tr><td>(기본) 단계·FM</td><td>features.parquet</td><td><code>yw_run/step3_xgb_stages.py</code>, <code>step4_fm_h1h2.py</code></td><td><code>out_yw/stage_ic.csv</code>, <code>fama_macbeth.csv</code></td><td>IC 0.050→0.077→0.089→0.091, 개인 FM +0.77(t 3.2), 외국인 −0.23(t −1.2)</td></tr>
+<tr><td>6장 SHAP</td><td>features.parquet, fama_macbeth.csv</td><td><code>yw_run/step12_explain.py</code></td><td><code>out_yw/shap_vs_fm.csv</code>, <code>figK_shap_dependence.png</code></td><td>9개 모두 SHAP 방향 = FM 부호</td></tr>
+<tr><td>7장 FM vs XGB</td><td>features.parquet, <code>pred_3.parquet</code>(step3)</td><td><code>yw_run/step12_explain.py</code></td><td><code>out_yw/fm_vs_xgb_by_year.csv</code>, <code>figL_fm_vs_xgb.png</code></td><td>0.077 vs 0.091, +0.014(t 1.6), 9/11년</td></tr>
+<tr><td>8장 뉴스 만들기</td><td>빅카인즈 xlsx</td><td><code>news/match_rules.py</code>, <code>company_list_최종.csv</code>, <code>아영_정리보정.py</code>, <code>oldname_merge.py</code></td><td>articles_clean.csv (아영 드라이브)</td><td>162만 → 129만 1,011건, ESG 부정 42,517·긍정 38,467(v1.2)</td></tr>
+<tr><td>9장 감성</td><td>sent_monthly_input.csv + features.parquet</td><td><code>yw_run/sent_analysis_yw.py</code>, <code>sent_fm_period.py</code>, <code>sent_fig9.py</code>, <code>sent_extra_yw.py</code>, <code>sent_fig_h3h4.py</code></td><td><code>out_yw/news_sent_full/</code> (sent_ic, sent_fm_by_period, h3h4_by_period, f9_sent_full.png)</td><td>같은 달 IC 0.180, 다음 달 0.018; FM 2002–15 t≈3, 2016–21 0; XGB +0.0024(t 0.6); H4 지지 안 됨</td></tr>
+<tr><td>10장 유형 5개</td><td>파일럿 52개 파일, 사람 정답(예원·아영 라벨 xlsx, 드라이브)</td><td><code>news/news_rules.py</code>, <code>news/pilot_*.py</code></td><td><code>out/news_pilot/</code></td><td>사람끼리 62%, 규칙 69%, 화제형 정밀도 44%</td></tr>
+<tr><td>12장 ESG 분류</td><td><code>ESG_최종정답_100.csv</code> (사람 정답, 드라이브)</td><td><code>news/esg_rules.py</code></td><td>(정확도 직접 계산)</td><td>사람끼리 78%, 규칙 83%(처음), v1.2 91%</td></tr>
+<tr><td>13장 오류 수정</td><td>이안 2차 파일럿 5,308건 + v1.1 esg 결과</td><td><code>news/esg_rules.py</code>(v1.2), <code>esg_rules_v11.py</code>(이전)</td><td><code>out_yw/news_esg_noins/</code>(보험사 제외 확인)</td><td>부정 판정의 15%가 보험사 6곳 → v1.2로 수정</td></tr>
+<tr><td>14장 ESG 판정</td><td><code>out/news_esg_v12_input.csv</code> + features.parquet</td><td><code>yw_run/esg_analysis_yw.py</code>, <code>esg_v12_fig.py</code></td><td><code>out_yw/news_esg_v12/</code>, <code>out_yw/f4_esg_v12.png</code></td><td>부정 다음 달 −0.16%p(t −0.9), 긍정 같은 달 +0.51(t 3.4), XGB 0.021→0.017</td></tr>
+</table>
+
+<h2>3. 헷갈리기 쉬운 것: 지금은 안 쓰는 파일</h2>
+<table>
+<tr><th style="width:34%">파일·폴더</th><th>무엇</th><th style="width:22%">상태</th></tr>
+<tr><td><code>연습장/out/</code> (features.parquet, 그림들)</td><td>영섭이 처음 만든 정형 데이터(베타 60개월, 고유변동성). 예원 데이터와 정의가 다름</td><td>강건성 확인용. 결론 같음</td></tr>
+<tr><td><code>out_yw/news_esg_full_v11/</code>, <code>out/news_esg_full*/</code>, <code>f4_esg_yw.png</code></td><td>옛 ESG 규칙(v1.0·v1.1) 결과</td><td>v1.2로 대체</td></tr>
+<tr><td><code>out_yw/news_esg_noins/</code></td><td>보험사 6곳을 뺀 중간 확인</td><td>참고(13장 근거)</td></tr>
+<tr><td><code>out/news_pilot/</code>의 감성 결과</td><td>파일럿 52개 파일 감성(다음 달 0.002)</td><td>전체 129만 건 결과로 대체. 10장 유형 분류만 여기 결과</td></tr>
+<tr><td><code>news/esg_rules_v11.py</code>, <code>news_rules_v1.py</code></td><td>고치기 전 규칙</td><td>기록용</td></tr>
+<tr><td>sent_monthly의 esg_neg_tone·esg_pos_tone 칸</td><td>코랩에서 v1.1 라벨로 집계된 ESG 논조</td><td>참고용(해설서에 표시)</td></tr>
+</table>
+
+<h2>4. 처음부터 다시 돌리려면 (연습장/ 에서)</h2><p class="small">코드 안 파일 경로는 영섭 작업 환경 기준이라, 다른 컴퓨터에서는 맨 위 경로(OUT, P 등)만 바꾸면 됨.</p>
+<table>
+<tr><th style="width:6%">순서</th><th>명령</th><th style="width:30%">메모</th></tr>
+<tr><td>1</td><td><code>python yw_run/step1_build_features_yw.py final_structured_data_raw.csv</code></td><td>features.parquet 생성 (기존 파일과 완전히 같음 확인함)</td></tr>
+<tr><td>2</td><td><code>python yw_run/step2_preview.py</code> → <code>step3_xgb_stages.py</code> → <code>step4_fm_h1h2.py</code> → <code>step12_explain.py</code> → <code>step13_rolling.py</code> → <code>step14_period_quint.py</code></td><td>step12는 step3의 pred_3, step4의 FM 결과를 씀. step14 그림 하나는 step13 결과를 씀</td></tr>
+<tr><td>3</td><td><code>python yw_run/esg_analysis_yw.py out/news_esg_v12_input.csv v12</code> → <code>esg_v12_fig.py</code></td><td>14장</td></tr>
+<tr><td>4</td><td><code>python yw_run/sent_analysis_yw.py</code> → <code>sent_fm_period.py</code> → <code>sent_fig9.py</code> → <code>sent_extra_yw.py</code> → <code>sent_fig_h3h4.py</code></td><td>9장</td></tr>
+<tr><td>(뉴스 원본부터)</td><td>articles_clean.csv로 <code>news/영섭_ESG_VSCode.py --no-score</code>, 코랩 <code>news/영섭_감성전체_코랩.ipynb</code></td><td>원문 필요. 결과 csv 2개만 깃에 올림</td></tr>
+</table>
+
+</body></html>
