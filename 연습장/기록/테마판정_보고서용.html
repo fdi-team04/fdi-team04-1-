@@ -1,0 +1,103 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>뉴스 테마 판정 기록</title><style>
+@font-face{font-family:NG;src:url("file:///usr/local/lib/python3.13/dist-packages/koreanize_matplotlib/fonts/NanumGothic.ttf");}
+@font-face{font-family:NG;font-weight:bold;src:url("file:///usr/local/lib/python3.13/dist-packages/koreanize_matplotlib/fonts/NanumGothicBold.ttf");}
+body{font-family:NG,sans-serif;font-size:10pt;line-height:1.68;color:#172B4D;}
+h1{font-size:19pt;margin:0 0 1mm;color:#1E4E8C;} .sub{color:#5A6B82;font-size:9.2pt;margin-bottom:4mm;}
+h2{font-size:13pt;color:#fff;background:#1E4E8C;padding:1.6mm 3mm;margin:8mm 0 3mm;page-break-after:avoid;}
+h3{font-size:11pt;color:#1E4E8C;border-bottom:1.5px solid #CBD8EA;padding-bottom:0.8mm;margin:5mm 0 1.5mm;page-break-after:avoid;}
+h4{font-size:10pt;color:#2F6FBF;margin:3mm 0 1mm;page-break-after:avoid;}
+table{border-collapse:collapse;width:100%;margin:2mm 0;font-size:9.1pt;page-break-inside:avoid;}
+th,td{border:1px solid #CBD8EA;padding:1.2mm 2mm;text-align:left;vertical-align:top;} th{background:#E9F0F9;}
+td.n{text-align:right;}
+.why{background:#F3F7FC;border-left:4px solid #2F6FBF;padding:2mm 3.5mm;margin:2mm 0;page-break-inside:avoid;}
+.why b{color:#1E4E8C;}
+.qa{border:1px solid #CBD8EA;border-radius:2mm;padding:2mm 3.5mm;margin:2mm 0;page-break-inside:avoid;}
+.qa .q{font-weight:bold;color:#C2611A;} .qa .a{margin-top:0.8mm;}
+.box{border:1px solid #CBD8EA;border-left:5px solid #1E4E8C;background:#F7FAFD;padding:2.5mm 4mm;margin:2.5mm 0;page-break-inside:avoid;}
+img{width:88%;display:block;margin:2mm auto;page-break-inside:avoid;}
+.pb{page-break-before:always;} .small{font-size:8.8pt;color:#5A6B82;}
+ol,ul{margin:1mm 0;padding-left:6mm;}
+</style></head><body>
+</head><body><h1>뉴스 테마 판정 기록 (5개 테마 + 월말 논란)</h1>
+<div class="sub">보고서용 · 11/20 · 데이터: 팀 정형 데이터셋(예원) + 뉴스 129만 건(제목 키워드) · 코드: yw_run/theme_judge_yw.py, h5b_late_yw.py · 결과: out_yw/theme_judge_full/, out_yw/h5b_late/</div>
+
+<div class="box"><b>요약</b>
+<ol>
+<li>ESG와 같은 틀로 뉴스 테마 5개(실적, 애널리스트 의견, 주주환원·자금조달, 신용등급, 사업 계약)를 긍정·부정으로 나눠 판정했다.</li>
+<li><b>미리 정한 기준을 통과한 것은 긍정 쪽 3개</b>: 실적 호재(FM t 2.9), 애널리스트 목표가 상향(FM t 2.7), 수주·공급계약(FM t 2.1). 부정 쪽은 모두 통과 못 함.</li>
+<li><b>하지만 실적·애널리스트 효과는 2015년까지에 몰려 있고 2016–21엔 거의 0</b>이다(+0.05, +0.04%p). 감성 점수와 같은 모양이다. 수주는 기간마다 방향이 뒤집혀 불안정하다.</li>
+<li>XGBoost에 넣으면 실적(11년 중 8년, 2016–21엔 6년 중 5년)과 애널리스트(7년) IC가 올랐다. 평균 증가는 작다(+0.003, t 1.1).</li>
+<li>월말까지 이어진 논란(H5-B)은 다음 달 효과가 없어 종료(−0.40%p, t −0.6).</li>
+<li><b>다음 단계: '실적' 테마를 파 보기 1순위</b>로 한다(사람 확인, 키워드 vs 임베딩, 테마 기사 논조).</li>
+</ol></div>
+
+<h2>1. 왜 했나</h2>
+<div class="why">ESG는 다음 달 효과가 없었다. 11/18 피드백대로 한 명이 여러 테마를 같은 기준으로 빠르게 걸러서, 통과한 테마만 팀이 깊게 판다. 테마는 <b>"돈과 직결되는데 시장이 천천히 따라간다고 알려진 소식"</b>으로 골랐다. 예: 실적 발표 뒤 주가 표류, 애널리스트 의견 변경 뒤 주가 표류.</div>
+
+<h2>2. 방법 (ESG와 같은 틀)</h2>
+<table>
+<tr><th style="width:22%">테마</th><th>긍정 기사 (제목 키워드)</th><th>부정 기사 (제목 키워드)</th></tr>
+<tr><td>실적</td><td>어닝 서프라이즈, 깜짝 실적, 실적 호조, 최대 실적, 흑자전환, 실적 개선</td><td>어닝 쇼크, 실적 부진·악화, 적자전환·확대 (전망·우려·예상 제목 제외)</td></tr>
+<tr><td>애널리스트 의견</td><td>목표가↑, 목표(주)가 상향, 투자의견 상향</td><td>목표가↓, 목표(주)가 하향, 투자의견 하향</td></tr>
+<tr><td>주주환원·자금조달</td><td>자사주 매입·취득·소각, 배당 확대</td><td>유상증자, CB·BW·교환사채, 블록딜, 지분 매각, 오버행</td></tr>
+<tr><td>신용등급</td><td>신용등급 상향</td><td>신용등급 하향·강등</td></tr>
+<tr><td>사업 계약</td><td>수주, 공급(납품) 계약</td><td>-</td></tr>
+</table>
+<p>표본: 해마다 직전 12월 시총 상위 200 × 그해 기사 있는 종목, 2001–2021 (약 4만 9천 종목-월). 이달 말까지의 기사로 신호를 만들고 다음 달 수익률을 봄. 키워드 사전(theme_rules.py v0)은 결과를 보기 전에 고정.</p>
+
+<h2>3. 판정 기준 (결과 보기 전에 정함)</h2>
+<div class="why">부정: 다음 달 차이 t ≤ −2 또는 통제 9개 FM t ≤ −2 / 긍정: 다음 달 차이 t ≥ 2 또는 FM t ≥ 2 / 최근 유지: 통과한 쪽의 2016–21 다음 달 차이가 같은 방향<br>
+→ 통과 + 최근 유지: <b>지지</b> (XGBoost IC가 11년 중 6년 이상 오르면 모델 반영 후보) / 통과했지만 2016–21 뒤집힘: 보류 / 미통과: 빼기 / 종목-월 300개 미만: 표본 부족</div>
+
+<h2>4. 결과</h2>
+<img src="fig_theme_by_period.png" style="width:100%">
+<table>
+<tr><th style="width:14%">테마</th><th style="width:7%">신호</th><th class="n" style="width:9%">종목-월</th><th>같은 달(참고)</th><th>다음 달 차이</th><th>FM (통제 9개)</th><th>2001–10 / 2011–15 / 2016–21</th></tr>
+<tr><td rowspan="2">실적</td><td>긍정</td><td class="n">6,011</td><td class="n">+2.32 (t 11.6)</td><td class="n"><b>+0.50 (t 2.3)</b></td><td class="n"><b>+0.57 (t 2.9)</b></td><td class="n">+0.85* / +0.33 / +0.05</td></tr>
+<tr><td>부정</td><td class="n">2,664</td><td class="n">−2.97 (t −8.3)</td><td class="n">−0.27 (t −0.7)</td><td class="n">−0.38 (t −1.2)</td><td class="n">−0.43 / −0.38 / +0.08</td></tr>
+<tr><td rowspan="2">애널리스트 의견</td><td>긍정</td><td class="n">6,445</td><td class="n">+4.99 (t 16.5)</td><td class="n">+0.38 (t 1.6)</td><td class="n"><b>+0.56 (t 2.7)</b></td><td class="n">+0.35 / +0.82* / +0.04</td></tr>
+<tr><td>부정</td><td class="n">4,206</td><td class="n">−3.59 (t −11.2)</td><td class="n">−0.24 (t −0.6)</td><td class="n">−0.22 (t −0.6)</td><td class="n">−0.62 / −0.25 / +0.38</td></tr>
+<tr><td rowspan="2">주주환원·자금조달</td><td>긍정</td><td class="n">1,217</td><td class="n">+1.37 (t 2.2)</td><td class="n">−0.12 (t −0.4)</td><td class="n">−0.02 (t −0.0)</td><td class="n">−0.02 / −0.13 / −0.29</td></tr>
+<tr><td>부정</td><td class="n">2,624</td><td class="n">−1.27 (t −3.6)</td><td class="n">−0.43 (t −1.3)</td><td class="n">−0.38 (t −1.2)</td><td class="n">−0.57 / −0.76 / +0.09</td></tr>
+<tr><td rowspan="2">신용등급</td><td>긍정</td><td class="n">310</td><td class="n">+1.19 (t 1.5)</td><td class="n">−0.74 (t −1.0)</td><td class="n">−0.49 (t −1.1)</td><td class="n">−0.87 / 0.00 / −1.06</td></tr>
+<tr><td>부정</td><td class="n">263</td><td class="n">−3.85 (t −3.9)</td><td class="n">+0.55 (t 0.5)</td><td class="n">+0.30 (t 0.5)</td><td class="n">표본 부족</td></tr>
+<tr><td>사업 계약</td><td>긍정</td><td class="n">6,709</td><td class="n">+0.37 (t 1.7)</td><td class="n">+0.32 (t 1.5)</td><td class="n"><b>+0.41 (t 2.1)</b></td><td class="n">+0.68* / −0.81* / +0.67</td></tr>
+</table>
+<p class="small">단위 %p/월. * = |t| ≥ 2. 순지표(긍정−부정) 다음 달 IC는 모든 테마에서 유의하지 않음(t 0.1~1.2).</p>
+<table>
+<tr><th>테마</th><th>XGBoost 기준 IC → +테마</th><th>차이 t</th><th>오른 해 (11년 중)</th><th>2016–21 오른 해</th></tr>
+<tr><td>실적</td><td class="n">0.0207 → 0.0242</td><td class="n">1.1</td><td class="n"><b>8</b></td><td class="n">5 / 6</td></tr>
+<tr><td>애널리스트 의견</td><td class="n">0.0207 → 0.0237</td><td class="n">1.0</td><td class="n"><b>7</b></td><td class="n">3 / 6</td></tr>
+<tr><td>주주환원·자금조달</td><td class="n">0.0207 → 0.0203</td><td class="n">−0.2</td><td class="n">5</td><td class="n">3 / 6</td></tr>
+<tr><td>신용등급</td><td class="n">0.0207 → 0.0212</td><td class="n">0.3</td><td class="n">7</td><td class="n">3 / 6</td></tr>
+<tr><td>사업 계약</td><td class="n">0.0207 → 0.0176</td><td class="n">−1.2</td><td class="n">4</td><td class="n">3 / 6</td></tr>
+</table>
+<p class="small">기준 IC 0.0207은 상위 200 뉴스 표본 기준이라 전체 코스피 모델 IC(0.091)와 다르다.</p>
+
+<h2>5. 판정과 해석</h2>
+<table>
+<tr><th style="width:18%">테마</th><th style="width:20%">규칙상 판정</th><th>해석</th></tr>
+<tr><td>실적</td><td><b>지지 (긍정)</b></td><td>실적 호재 기사가 난 종목은 다른 변수를 통제해도 다음 달 +0.57%p. 실적 발표 뒤 주가가 천천히 따라가는 현상과 같은 방향. 다만 효과는 2001–10에 가장 크고 2016–21엔 거의 0. XGBoost에서는 2016–21에도 6년 중 5년 IC가 올라, 단순 차이로 안 보이는 다른 변수와의 조합 효과가 남아 있을 수 있음</td></tr>
+<tr><td>애널리스트 의견</td><td><b>지지 (긍정)</b></td><td>목표가 상향 기사 종목이 다음 달 +0.56%p(통제 후). 효과가 2011–15에 몰려 있고 2016–21엔 거의 0. XGBoost 7/11년</td></tr>
+<tr><td>사업 계약</td><td>지지 (긍정), 불안정</td><td>FM t 2.1로 겨우 통과. 2011–15엔 반대 방향(t −2.1)이고 XGBoost에 넣으면 IC가 떨어짐(4/11년) → 모델 반영 안 함</td></tr>
+<tr><td>주주환원·자금조달</td><td>빼기</td><td>같은 달엔 반응하지만(자사주 +1.4, 증자 −1.3) 다음 달은 없음</td></tr>
+<tr><td>신용등급</td><td>빼기 (부정은 표본 부족)</td><td>기사가 적고 효과 없음</td></tr>
+<tr><td>부정 기사 전반</td><td>모두 미통과</td><td>나쁜 소식은 같은 달에 크게 반영(실적 악재 −3.0, 목표가 하향 −3.6%p)되고 다음 달엔 남지 않음</td></tr>
+</table>
+<div class="why"><b>조심할 점 1: 최근 유지 기준이 약했다.</b> 기준을 "2016–21에 방향만 같으면 됨"으로 정해서, 실적(+0.05)·애널리스트(+0.04)는 거의 0인데도 통과했다. 규칙은 결과를 보고 바꾸지 않으므로 판정은 '지지'로 두되, <b>"효과는 2015년까지 뚜렷했고 최근엔 약하다"</b>를 함께 기록한다. 감성 점수 결과(2015년까지만 다음 달 예측)와 같은 모양이다.<br>
+<b>조심할 점 2: 여러 개를 동시에 봤다.</b> 9개 신호를 보면 우연히 t 2를 넘는 게 0.5개쯤 나올 수 있다. 실적(t 2.9)은 우연으로 보기 어렵지만, 사업 계약(t 2.1)은 우연일 수 있어 불안정한 기간 결과와 함께 낮게 본다.<br>
+<b>왜 긍정만 남나 (해석):</b> 나쁜 소식은 투자자가 즉시 팔아 그달에 반영되고, 좋은 소식은 천천히 반영된다는 연구들이 있다. 같은 달 반응도 부정이 더 크다.</div>
+
+<h2>6. 월말 진행 중 논란 (H5-B)</h2>
+<div class="why"><b>정의(미리 정함):</b> H5의 급증(부정 ESG 5건 이상, 평소 3배 이상) 중 그달 마지막 7일에도 부정 기사가 있는 경우 = 이달 말에 논란이 아직 진행 중. 비교는 급증했지만 마지막 7일엔 기사가 없는 '월초 종료'.<br>
+<b>결과:</b> 월말 진행 406건, 다음 달 −0.40%p (t −0.6), 1~3개월 누적 −0.80%p (t −0.7), FM −0.31 (t −0.8). 월초 종료 567건은 다음 달 −1.10%p (t −1.9)로 기준(t −2)에 조금 못 미침.<br>
+<b>판정: 종료.</b> 이달 말까지 이어진 논란이라도 다음 달에 뚜렷한 추가 하락은 없다. H5(지속 논란)와 같은 결론.</div>
+
+<h2>7. 다음 단계</h2>
+<table>
+<tr><th style="width:8%">순위</th><th style="width:22%">무엇</th><th>내용</th><th style="width:12%">담당</th></tr>
+<tr><td>1</td><td>실적 테마 파 보기</td><td>① 제목 50건 사람 확인(정밀도 80%) ② 키워드 vs 임베딩 비교(교수님 질문) ③ 실적 기사 논조(감성 점수)로도 같은 효과가 나는지(코랩) ④ 2016–21 효과가 정말 0인지, XGBoost에서만 남는 이유 확인</td><td>아영 ①, 이안 ②④, 영섭 ③</td></tr>
+<tr><td>2</td><td>애널리스트 의견</td><td>실적과 겹치는 기사가 많을 수 있음(목표가 상향 사유가 실적). 두 테마를 함께 넣었을 때 각자 남는지 확인</td><td>영섭</td></tr>
+<tr><td>3</td><td>사업 계약</td><td>보류. 기간마다 방향이 바뀌고 모델 IC를 낮춤</td><td>-</td></tr>
+</table>
+</body></html>

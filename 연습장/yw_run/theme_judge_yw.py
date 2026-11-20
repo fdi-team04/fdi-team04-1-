@@ -78,6 +78,7 @@ for g, d in GROUPS.items():
     if base is not None:
         u[f"{k}_pos"] = np.log1p(npos); u[f"{k}_neg"] = np.log1p(nneg); u[f"{k}_net"] = u.net.fillna(0)
         i4 = xgb_ic(F3 + [f"{k}_pos", f"{k}_neg", f"{k}_net"]); dd = i4 - base; yr = dd.groupby(dd.index.str[:4]).mean()
+        yr.rename(g).to_frame().T.to_csv(f"{P}/xgb_by_year_{k}.csv", encoding="utf-8-sig")
         R.update({"XGB 기준 IC": base.mean(), "XGB +테마 IC": i4.mean(), "XGB 차이 t": tt(dd), "XGB 오른 해": int((yr > 0).sum())})
     # 판정
     okp = (R.get("긍정 t", 0) >= 2) or (R.get("FM 긍정 t", 0) >= 2)
