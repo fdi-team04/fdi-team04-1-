@@ -1,0 +1,92 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>뉴스 진행 정리와 할 일</title><style>
+@font-face{font-family:NG;src:url("file:///usr/local/lib/python3.13/dist-packages/koreanize_matplotlib/fonts/NanumGothic.ttf");}
+@font-face{font-family:NG;font-weight:bold;src:url("file:///usr/local/lib/python3.13/dist-packages/koreanize_matplotlib/fonts/NanumGothicBold.ttf");}
+body{font-family:NG,sans-serif;font-size:10pt;line-height:1.68;color:#172B4D;}
+h1{font-size:19pt;margin:0 0 1mm;color:#1E4E8C;} .sub{color:#5A6B82;font-size:9.2pt;margin-bottom:4mm;}
+h2{font-size:13pt;color:#fff;background:#1E4E8C;padding:1.6mm 3mm;margin:8mm 0 3mm;page-break-after:avoid;}
+h3{font-size:11pt;color:#1E4E8C;border-bottom:1.5px solid #CBD8EA;padding-bottom:0.8mm;margin:5mm 0 1.5mm;page-break-after:avoid;}
+h4{font-size:10pt;color:#2F6FBF;margin:3mm 0 1mm;page-break-after:avoid;}
+table{border-collapse:collapse;width:100%;margin:2mm 0;font-size:9.1pt;page-break-inside:avoid;}
+th,td{border:1px solid #CBD8EA;padding:1.2mm 2mm;text-align:left;vertical-align:top;} th{background:#E9F0F9;}
+td.n{text-align:right;}
+.why{background:#F3F7FC;border-left:4px solid #2F6FBF;padding:2mm 3.5mm;margin:2mm 0;page-break-inside:avoid;}
+.why b{color:#1E4E8C;}
+.qa{border:1px solid #CBD8EA;border-radius:2mm;padding:2mm 3.5mm;margin:2mm 0;page-break-inside:avoid;}
+.qa .q{font-weight:bold;color:#C2611A;} .qa .a{margin-top:0.8mm;}
+.box{border:1px solid #CBD8EA;border-left:5px solid #1E4E8C;background:#F7FAFD;padding:2.5mm 4mm;margin:2.5mm 0;page-break-inside:avoid;}
+img{width:88%;display:block;margin:2mm auto;page-break-inside:avoid;}
+.pb{page-break-before:always;} .small{font-size:8.8pt;color:#5A6B82;}
+ol,ul{margin:1mm 0;padding-left:6mm;}
+code{font-size:8.4pt;background:#F0F4FA;padding:0 1mm;border-radius:1mm;word-break:break-all}
+.step td{vertical-align:top} .k{color:#1E4E8C;font-weight:bold;white-space:nowrap} .res{color:#172B4D} .tag{display:inline-block;padding:0 1.5mm;border-radius:1mm;font-size:8.4pt;font-weight:bold}
+.go{background:#E3F1E7;color:#1F6B3A} .stop{background:#FBE6E3;color:#A23B2A} .hold{background:#FFF3D6;color:#8A6200}
+h3{margin-top:4mm}
+</style></head><body>
+</head><body><h1>뉴스 분석 진행 정리 + 팀원별 할 일</h1>
+<div class="sub">11/18 피드백 이후 ~ 11/21 · 4팀 · 근거 파일은 모두 깃 브랜치 claude/gracious-fermat-5vr5w2 의 연습장/ 아래</div>
+
+<div class="box"><b>한 줄 요약</b>: 뉴스는 대부분 "나온 달에 반영되고 끝"이었다. 테마를 바꿔 빠르게 걸러 본 결과, <b>'애널리스트 목표가 상향' 기사 하나가 다음 달까지 효과가 남는 최종 후보</b>로 남았다. 이번 주 핵심은 <b>이 변수를 전체 모델에 넣으면 IC가 오르는지</b> 확인하는 것.</div>
+
+<h2>1. 지금까지 한 것 (11/18 → 11/21)</h2>
+<table class="step">
+<tr><th style="width:4%">#</th><th style="width:30%">왜</th><th style="width:30%">무엇을</th><th>결과</th></tr>
+<tr><td>0</td><td>11/18 교수님 피드백</td><td>"새 가설은 한 명이 빠르게 확인, 기준은 미리, 분류 방식(키워드 vs 임베딩)의 근거를 남겨라"</td><td>이후 모든 확인을 <b>영섭이 먼저 빠르게 + 결과 보기 전 판정 기준</b>으로 진행</td></tr>
+<tr><td>1</td><td>이안 점검에서 ESG 키워드 오류 발견</td><td>규칙 v1.2로 고쳐 129만 건 다시 분류</td><td>부정 판정의 15%가 보험사 이름('메리츠화재')이었음. 고쳐도 결론 같음: <span class="tag stop">ESG 효과 없음</span></td></tr>
+<tr><td>2</td><td>감성 점수가 일부 데이터 결과뿐이었음</td><td>129만 건 전체에 감성 점수(KR-FinBert)</td><td>같은 달은 강함(IC 0.18). 다음 달은 2015년까지만 있고 2016년부터 0 → <span class="tag stop">최근 사용 불가</span></td></tr>
+<tr><td>3</td><td>교수님 전제 "한 달 넘게 가는 뉴스(논란)가 있나"</td><td>지난달부터 이어진 논란(323건), 월말까지 이어진 논란(406건)</td><td>다음 달 −0.46%p (t −0.7), −0.40%p (t −0.6) → <span class="tag stop">논란형 종료</span></td></tr>
+<tr><td>4</td><td>ESG 대신 다음 달까지 남을 만한 테마 찾기</td><td>테마 5개를 ESG와 같은 틀로 판정 (실적, 목표가, 주주환원·자금조달, 신용등급, 수주)</td><td>좋은 소식 3개만 통과: <b>실적 호재</b>(통제 후 +0.57%p, t 2.9), <b>목표가 상향</b>(+0.56%p, t 2.7), 수주(t 2.1, 불안정). 나쁜 소식은 전부 그달에 끝</td></tr>
+<tr><td>5</td><td>목표가 효과가 사실 실적 효과인지</td><td>둘을 같이 넣어 비교</td><td>겹침 1/3뿐, 같이 넣어도 둘 다 유지(t 2.4) → 서로 다른 정보</td></tr>
+<tr><td>6</td><td>'얼마나 좋게 썼나'(논조)도 쓸모 있나</td><td>테마 기사의 감성 점수로 다시 확인</td><td>효과 없음. 호재 기사 논조가 거의 다 만점이라 차이가 안 남 → <span class="tag stop">'기사 있음/없음'만 사용</span></td></tr>
+<tr><td>7</td><td>키워드가 진짜 그 기사를 잡나 (정밀도 80% 기준)</td><td>아영·예원이 각자 50건씩 제목 판정</td><td>목표가 <b>94~100%</b> <span class="tag go">통과</span> / 실적 <b>54~72%</b> <span class="tag stop">미달</span> (전망·예고 기사가 많이 섞임)</td></tr>
+<tr><td>8</td><td>실적 키워드를 고쳐도 효과가 남나</td><td>키워드 v1('실적 개선'·전망 제목 제외)로 한 번만 재판정</td><td>2016–21 효과가 마이너스로 뒤집힘 → <span class="tag hold">실적 보류(최근 소멸)</span></td></tr>
+<tr><td>9</td><td>최종 후보 정리</td><td>목표가 상향 변수 파일 생성</td><td><span class="tag go">최종 후보: 목표가 상향</span> → <code>out/목표가상향_변수_종목월.csv</code></td></tr>
+</table>
+
+<h2>2. 팀원별 할 일</h2>
+<p class="small">공통 규칙: 뉴스 월은 이미 '그달 마지막 거래일 전 기사 = 그달'로 맞춰져 있음 → 정형 데이터 같은 월에 붙이고 <b>절대 추가로 밀지 않음</b>. 예측 대상은 다음 달 수익률(target). 기사 제목이 든 파일(50건 엑셀, articles_clean.csv)은 깃·공개 채널에 올리지 않음.</p>
+
+<h3>영섭</h3>
+<table>
+<tr><th style="width:15%">마감</th><th>할 일</th><th style="width:36%">사용 파일</th></tr>
+<tr><td>월 회의 전</td><td>① 이안에게 목표가 변수 파일 2개 전달 ② 50건 판정 엑셀 4개를 이안에게 비공개로 전달(톡방 파일/비공개 드라이브)</td><td><code>out/목표가상향_변수_종목월.csv</code>, <code>out/목표가상향_변수_설명.md</code>, 판정 엑셀 4개(영섭 PC)</td></tr>
+<tr><td>월 회의</td><td>안건 진행, 결정 3개 남기기: 최종 후보 확정 / 화요일 담당·마감 / 수요일 슬라이드 목록</td><td><code>기록/월요일안건_1123.md</code></td></tr>
+<tr><td>화 밤</td><td>③ 시도한 가설 집계표 (가설별: 기준·결과·판정) ④ 목표가 상향 최근 약화 확인(연도별 효과, 상위 200 안 큰·작은 종목) — Claude에게 요청하면 바로 계산 ⑤ 교수님 질문 정리(2022년 예측 방식, 2022년 뉴스 사용 가능 여부, 키워드 vs 임베딩 근거)</td><td><code>기록/테마판정_보고서용.pdf</code>, <code>기록/H5_논란형_보고서용.pdf</code>, <code>기록/50건판정_결과_1121.md</code>, <code>기록/테마논조_결과_1121.md</code></td></tr>
+<tr><td>수 브리핑 전</td><td>⑥ 수요일 슬라이드(3분): 진행 방식 변경 → 논란형 종료 → 테마 판정 그래프 → 사람 확인·실적 재판정 → 목표가 상향 → 전체 모델 결과(이안)</td><td><code>out_yw/theme_judge_full/fig_theme_by_period.png</code>, 이안 실험 결과</td></tr>
+</table>
+
+<h3>이안</h3>
+<table>
+<tr><th style="width:15%">마감</th><th>할 일</th><th style="width:36%">사용 파일</th></tr>
+<tr><td>월 회의 전</td><td>① 환경 고정(패키지 버전·난수) + 01~06 실행 결과 ② 전체 모델 실험 계획 초안(아래 ③ 방식)</td><td>팀 코드 01~06, 예원 정형 데이터셋</td></tr>
+<tr><td><b>화 밤 (가장 중요)</b></td><td>③ <b>전체 모델 실험</b>: 예원이 합친 데이터(없으면 직접 month·code로 합치기)로 XGBoost 확장 학습(2011–2021 해마다) <b>9개 변수</b> vs <b>9개 + tp_up + news_covered</b>. 파일에 없는 종목-월은 tp_up=0, news_covered=0. 결과: 연도별 IC, 평균 IC, 차이 t, 오른 해 수. <b>통과 = 평균 IC 상승 + 11년 중 6년 이상 상승</b>. 참고로 <code>n_earn_up_v1</code>(실적 v1)도 같은 방식으로 한 번</td><td><code>out/목표가상향_변수_종목월.csv</code>(tp_up), 예원 합친 데이터, <code>out/목표가상향_변수_설명.md</code></td></tr>
+<tr><td>화 밤</td><td>④ <b>키워드 vs 임베딩</b>: 합의 정답 100건(목표가 50 + 실적 50)에서 임베딩(KR-FinBert 등) 분류가 진짜/가짜를 얼마나 맞히는지 vs 키워드 정밀도. 결과: 정확도 표 + "왜 이 방법을 쓰는지" 한 줄. (100건은 모두 키워드가 고른 기사라는 한계 명시)</td><td>50건 판정 엑셀 4개 + 월요일 합의 정답</td></tr>
+<tr><td>화 밤</td><td>⑤ 2022년 기사 수집 가능 여부 확인 (빅카인즈, 같은 언론사 5곳, 상위 200) — 목표가 변수를 최종 모델에 넣으면 2022년 예측에 필요</td><td>-</td></tr>
+<tr><td>수 이후 가능</td><td>⑥ SHAP 중요도·방향 정리('가설 판정에 방향이 필요했다' 순서) ⑦ prediction.csv 뼈대 + 2021년 가짜 test 리허설</td><td>06 결과</td></tr>
+</table>
+
+<h3>예원</h3>
+<table>
+<tr><th style="width:15%">마감</th><th>할 일</th><th style="width:36%">사용 파일</th></tr>
+<tr><td>월 회의</td><td>① 아영과 50건 갈린 건 합의 → 엑셀에 '최종' 칸 추가해 이안에게: <b>목표가 3건</b>(25, 37, 39번), <b>실적 15건</b>(갈린 13건: 3, 4, 7, 13, 14, 15, 18, 20, 26, 31, 43, 44, 49번 + 둘 다 애매 2건: 25, 40번)</td><td>본인·아영 판정 엑셀(실적 seed 1120, 목표가 seed 1120)</td></tr>
+<tr><td><b>월 밤</b></td><td>② 정형 데이터셋 최종본 ③ <b>정형 + 목표가 변수 합치기</b>: month·code 기준 왼쪽 합치기, 없는 행은 tp_up=0·news_covered=0, 월 이동 금지 → 이안에게 전달</td><td>정형 final, <code>out/목표가상향_변수_종목월.csv</code></td></tr>
+<tr><td>화 밤</td><td>④ 미래 정보 누수 점검: 뉴스 월 = 정형 월인지, target이 다음 달인지, 정형 변수가 그 달 말까지 정보인지 체크리스트로</td><td>합친 데이터</td></tr>
+<tr><td>수 브리핑 전</td><td>⑤ 계획서에 중간 결정 기록: 80% 기준 근거, ESG v1.2 수정, 논란형 종료, 테마 판정 기준·결과, 50건 결과, 실적 v1 보류, 논조 미사용 ⑥ 변수 이론 근거 표 + 데이터 사전(tp_up, news_covered 포함)</td><td><code>기록/</code> 아래 파일들, 이 PDF 1장</td></tr>
+</table>
+
+<h3>아영</h3>
+<table>
+<tr><th style="width:15%">마감</th><th>할 일</th><th style="width:36%">사용 파일</th></tr>
+<tr><td>월 회의 전</td><td>① <b>뉴스 결측 처리 기준 확정</b>(이안 실험이 이걸 기다림): 상위 200 밖 = tp_up 0 + news_covered 0 / 상위 200 안인데 그달 기사 0건 = tp_up 0 + news_covered 1. 한 장으로 정리해서 이안·예원에게</td><td><code>out/목표가상향_변수_설명.md</code></td></tr>
+<tr><td>월 회의</td><td>② 예원과 50건 갈린 건 합의 (예원 칸 참고)</td><td>판정 엑셀</td></tr>
+<tr><td>화 밤</td><td>③ 슬라이드 숫자 점검: ESG 부정 42,517건·다음 달 −0.16%p(t −0.9), 8장 깔때기, 9장 감성(2015년까지/2016 이후), 13장 보험사 오류 숫자가 최신인지</td><td>발표 슬라이드, <code>해설서/4팀_발표해설서_1118.pdf</code></td></tr>
+<tr><td>수 이후</td><td>④ 뉴스 정리 이력표(수집일·언론사·4,719건 복구·16.6% 제거 근거)</td><td>아영 정리 기록</td></tr>
+</table>
+
+<h2>3. 무엇이 무엇을 기다리나</h2>
+<table>
+<tr><th>먼저</th><th>그다음</th></tr>
+<tr><td>아영 결측 기준 (월 회의 전)</td><td>예원 합치기 (월 밤) → 이안 전체 모델 실험 (화 밤) → 수요일 결론 "목표가 상향을 모델에 넣는다/안 넣는다"</td></tr>
+<tr><td>아영·예원 갈린 건 합의 (월 회의)</td><td>이안 키워드 vs 임베딩 (화 밤) → 교수님 질문에 대한 답</td></tr>
+<tr><td>이안 실험 결과 (화 밤)</td><td>영섭 수요일 슬라이드 확정</td></tr>
+</table>
+</body></html>
