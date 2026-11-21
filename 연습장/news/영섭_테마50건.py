@@ -1,6 +1,7 @@
 """테마 사람 확인용 제목 50건 뽑기 (아무 테마나, VS Code, 1분)
 같은 폴더: 이 파일, theme_rules.py, articles_clean.csv
 실행: python 영섭_테마50건.py articles_clean.csv 목표가_상향      (마지막에 theme_rules.py의 테마 이름)
+      새 표본: python 영섭_테마50건.py articles_clean.csv 실적_호재 --seed=1121
 결과: <테마>_사람확인_50건.xlsx → 아영에게 전달 (기사 제목이 들어 있으니 깃·공개 채널엔 올리지 말 것)
 뽑는 법: 그 테마로 잡힌 기사에서 기간별(2001–10 / 2011–15 / 2016–21) 비율대로, 같은 제목은 하나만,
         한 회사는 최대 3건, 무작위(시드 고정 1120 → 다시 돌려도 같은 50건)
@@ -12,7 +13,8 @@ from theme_rules import THEMES
 ARGS = [a for a in sys.argv[1:] if not a.startswith("--")]
 SRC = ARGS[0] if ARGS else "articles_clean.csv"; TH = ARGS[1] if len(ARGS) > 1 else "목표가_상향"
 if TH not in THEMES: sys.exit(f"테마 이름이 없어요: {TH}  (가능: {', '.join(THEMES)})")
-OUT = os.path.join(os.path.dirname(os.path.abspath(SRC)), f"{TH}_사람확인_50건.xlsx"); N = 50; SEED = 1120
+SEED = int(next((a.split("=")[1] for a in sys.argv if a.startswith("--seed=")), 1120))   # 새 표본이 필요하면 --seed=1121 처럼
+OUT = os.path.join(os.path.dirname(os.path.abspath(SRC)), f"{TH}_사람확인_50건" + ("" if SEED == 1120 else f"_seed{SEED}") + ".xlsx"); N = 50
 head = pd.read_csv(SRC, nrows=0).columns
 pick = lambda *c: next((x for x in c if x in head), None)
 C = {"code": pick("code", "종목코드"), "date": pick("date", "일자"), "title": pick("title", "제목")}
