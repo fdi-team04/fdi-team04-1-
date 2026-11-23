@@ -1,0 +1,62 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>키워드 vs 임베딩</title><style>
+@font-face{font-family:NG;src:url("file:///usr/local/lib/python3.13/dist-packages/koreanize_matplotlib/fonts/NanumGothic.ttf");}
+@font-face{font-family:NG;font-weight:bold;src:url("file:///usr/local/lib/python3.13/dist-packages/koreanize_matplotlib/fonts/NanumGothicBold.ttf");}
+body{font-family:NG,sans-serif;font-size:10pt;line-height:1.68;color:#172B4D;}
+h1{font-size:19pt;margin:0 0 1mm;color:#1E4E8C;} .sub{color:#5A6B82;font-size:9.2pt;margin-bottom:4mm;}
+h2{font-size:13pt;color:#fff;background:#1E4E8C;padding:1.6mm 3mm;margin:8mm 0 3mm;page-break-after:avoid;}
+h3{font-size:11pt;color:#1E4E8C;border-bottom:1.5px solid #CBD8EA;padding-bottom:0.8mm;margin:5mm 0 1.5mm;page-break-after:avoid;}
+h4{font-size:10pt;color:#2F6FBF;margin:3mm 0 1mm;page-break-after:avoid;}
+table{border-collapse:collapse;width:100%;margin:2mm 0;font-size:9.1pt;page-break-inside:avoid;}
+th,td{border:1px solid #CBD8EA;padding:1.2mm 2mm;text-align:left;vertical-align:top;} th{background:#E9F0F9;}
+td.n{text-align:right;}
+.why{background:#F3F7FC;border-left:4px solid #2F6FBF;padding:2mm 3.5mm;margin:2mm 0;page-break-inside:avoid;}
+.why b{color:#1E4E8C;}
+.qa{border:1px solid #CBD8EA;border-radius:2mm;padding:2mm 3.5mm;margin:2mm 0;page-break-inside:avoid;}
+.qa .q{font-weight:bold;color:#C2611A;} .qa .a{margin-top:0.8mm;}
+.box{border:1px solid #CBD8EA;border-left:5px solid #1E4E8C;background:#F7FAFD;padding:2.5mm 4mm;margin:2.5mm 0;page-break-inside:avoid;}
+img{width:88%;display:block;margin:2mm auto;page-break-inside:avoid;}
+.pb{page-break-before:always;} .small{font-size:8.8pt;color:#5A6B82;}
+ol,ul{margin:1mm 0;padding-left:6mm;}
+</style></head><body>
+</head><body><h1>키워드 vs 임베딩 분류 비교</h1>
+<div class="sub">11/23 · 교수님 11/18 질문("키워드로 할지 임베딩으로 할지, 고른 이유가 있어야 한다")에 대한 답</div>
+
+<div class="box"><b>결론</b>: <b>목표가 상향은 키워드</b>가 더 정확해서 키워드로 변수를 만든다(100% vs 임베딩 3건 누락). <b>실적처럼 뜻이 애매한 테마는 임베딩</b>이 전망 기사를 더 잘 걸러낸다(77% → 83~96%). 실적은 보류 테마라 지금은 적용하지 않음.</div>
+
+<h2>1. 무엇을 비교했나</h2>
+<table>
+<tr><th style="width:18%">방법</th><th>어떻게 분류하나</th><th style="width:30%">장단점</th></tr>
+<tr><td>키워드 (지금 방식)</td><td>제목에 정해 둔 단어가 있으면 그 테마 (예: '목표가↑', '목표주가 상향')</td><td>단순하고 이유가 보임 / 뜻은 못 봄 ('메리츠화재', '실적 개선 지속될 것')</td></tr>
+<tr><td>임베딩</td><td>AI 모델이 제목의 뜻을 숫자로 바꾸고, 그 숫자로 분류</td><td>뜻을 봄 (결과 vs 전망 구분) / 설명이 어렵고 손이 더 감</td></tr>
+</table>
+<p class="small">정답: 아영·예원 50건 판정 중 두 사람 답이 같은 기사 (실적 35건: 진짜 호재 27·아님 8 / 목표가 50건: 합의 후 전부 진짜). 임베딩 모델: 한국어 문장 임베딩(ko-sroberta), 금융 감성 모델(KR-FinBert). 임베딩 방식 두 가지: ① 정답으로 학습(한 건씩 빼고 학습해서 맞히기) ② 학습 없이 설명문('이미 나온 좋은 실적' / '앞으로의 전망' / '실적과 무관')과 비교</p>
+
+<h2>2. 결과</h2>
+<h3>실적 호재 (뜻이 애매한 테마)</h3>
+<table>
+<tr><th>방법</th><th class="n">남긴 기사</th><th class="n">정밀도</th><th class="n">진짜 호재를 놓친 수</th></tr>
+<tr><td>키워드 (지금 방식)</td><td class="n">35</td><td class="n">77%</td><td class="n">0</td></tr>
+<tr><td>임베딩 + 학습 (ko-sroberta)</td><td class="n">30</td><td class="n">83%</td><td class="n">2</td></tr>
+<tr><td><b>임베딩 + 설명문 비교 (ko-sroberta, 학습 없음)</b></td><td class="n">25</td><td class="n"><b>96%</b></td><td class="n">3</td></tr>
+<tr><td>임베딩 + 학습 (KR-FinBert)</td><td class="n">27</td><td class="n">85%</td><td class="n">4</td></tr>
+<tr><td>임베딩 + 설명문 비교 (KR-FinBert)</td><td class="n">32</td><td class="n">84%</td><td class="n">0</td></tr>
+</table>
+<h3>목표가 상향 (형식이 정해진 테마)</h3>
+<table>
+<tr><th>방법</th><th>결과</th></tr>
+<tr><td><b>키워드</b></td><td><b>정밀도 100%, 놓친 것 없음</b></td></tr>
+<tr><td>임베딩 (설명문 비교)</td><td>50건 중 47건만 남김 → 진짜 기사 3건을 놓침</td></tr>
+</table>
+<p class="small">정밀도 = 남긴 기사 중 사람이 '맞음'이라 한 비율</p>
+
+<h2>3. 해석</h2>
+<div class="why">목표가 상향 기사는 'OO, 목표가↑-XX증권'처럼 제목 형식이 정해져 있어서 키워드가 다 맞히고, 임베딩은 오히려 일부를 놓친다. 실적 기사는 같은 단어('실적 개선')가 결과일 수도 전망일 수도 있어서, 뜻을 보는 임베딩이 더 잘 가려낸다. → <b>테마의 성격에 따라 방법을 고른다</b>는 근거가 된다.</div>
+
+<h2>4. 한계</h2>
+<ul>
+<li>표본이 작음 (실적 35건, 그중 '아님' 8건) → 정밀도는 참고 수준</li>
+<li>설명문은 사람 판정에서 본 오류 유형을 보고 정해서, 학습 없는 방식이라도 완전히 독립적인 시험은 아님</li>
+<li>50건이 모두 키워드에 걸린 기사라, 키워드가 아예 못 잡은 기사는 비교하지 못함</li>
+</ul>
+<p class="small">코드: 연습장/yw_run/embed_vs_keyword.py · 결과: 연습장/out_yw/embed_vs_keyword.csv (기사 제목은 저장하지 않음)</p>
+</body></html>
