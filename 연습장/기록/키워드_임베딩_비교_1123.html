@@ -21,7 +21,7 @@ ol,ul{margin:1mm 0;padding-left:6mm;}
 </head><body><h1>키워드 vs 임베딩 분류 비교</h1>
 <div class="sub">11/23 · 교수님 11/18 질문("키워드로 할지 임베딩으로 할지, 고른 이유가 있어야 한다")에 대한 답</div>
 
-<div class="box"><b>결론</b>: <b>목표가 상향은 키워드</b>가 더 정확해서 키워드로 변수를 만든다(100% vs 임베딩 3건 누락). <b>실적처럼 뜻이 애매한 테마는 임베딩</b>이 전망 기사를 더 잘 걸러낸다(77% → 83~96%). 실적은 보류 테마라 지금은 적용하지 않음.</div>
+<div class="box"><b>결론</b>: <b>목표가 상향은 키워드</b>가 더 정확해서 키워드로 변수를 만든다(100% vs 임베딩 3건 누락). <b>실적처럼 뜻이 애매한 테마는 임베딩</b>이 전망 기사를 더 잘 걸러낸다(77% → 83~96%). 실적은 보류 테마라 지금은 적용하지 않음. <b>ESG</b>도 키워드가 더 정확(83~91% vs 70~82%)했고, 임베딩은 '화재' 같은 단어 오류를 피하는 점검용으로 유용.</div>
 
 <h2>1. 무엇을 비교했나</h2>
 <table>
@@ -58,5 +58,16 @@ ol,ul{margin:1mm 0;padding-left:6mm;}
 <li>설명문은 사람 판정에서 본 오류 유형을 보고 정해서, 학습 없는 방식이라도 완전히 독립적인 시험은 아님</li>
 <li>50건이 모두 키워드에 걸린 기사라, 키워드가 아예 못 잡은 기사는 비교하지 못함</li>
 </ul>
-<p class="small">코드: 연습장/yw_run/embed_vs_keyword.py · 결과: 연습장/out_yw/embed_vs_keyword.csv (기사 제목은 저장하지 않음)</p>
+<h2>5. 추가: ESG 테마 (사람 정답 100건, 부정/긍정/무관)</h2>
+<table>
+<tr><th>방법</th><th class="n">정확도</th><th class="n">부정 정밀도</th><th class="n">긍정 정밀도</th><th class="n">부정↔긍정 혼동</th></tr>
+<tr><td>키워드 v1.0 (처음, 통과 판단에 쓴 값)</td><td class="n">83%</td><td class="n">85%</td><td class="n">97%</td><td class="n">0</td></tr>
+<tr><td>키워드 v1.2 (오류 고친 최종, 같은 100건이라 참고)</td><td class="n">91%</td><td class="n">88%</td><td class="n">97%</td><td class="n">0</td></tr>
+<tr><td>임베딩 + 학습 (ko-sroberta)</td><td class="n">82%</td><td class="n">82%</td><td class="n">82%</td><td class="n">1</td></tr>
+<tr><td>임베딩 + 학습 (KR-FinBert)</td><td class="n">75%</td><td class="n">82%</td><td class="n">73%</td><td class="n">0</td></tr>
+<tr><td>임베딩 + 설명문 (KR-FinBert, 학습 없음)</td><td class="n">78%</td><td class="n">83%</td><td class="n">66%</td><td class="n">1</td></tr>
+<tr><td>임베딩 + 설명문 (ko-sroberta, 학습 없음)</td><td class="n">70%</td><td class="n">87%</td><td class="n">56%</td><td class="n">8</td></tr>
+</table>
+<div class="why"><b>'화재' 오류 예시 9개</b>(메리츠화재·동부화재·LG화재·동양화재컵·자산재평가 = 무관 / 공장화재·물류센터 화재·공장 폭발·산재 사망 = 부정): 고치기 전 키워드 v1.1은 보험사 이름을 전부 '부정'으로 잡아 4/9, 임베딩은 손으로 규칙을 고치지 않아도 보험사 이름을 '부정'으로 잡지 않아 6~7/9 (일부는 '긍정'으로 잘못 분류). 고친 키워드 v1.2는 9/9.<br>
+<b>해석</b>: 교수님 말씀대로 임베딩은 '화재' 같은 단어 오류를 스스로 피한다. 하지만 ESG 전체 정확도는 키워드(처음 83%, 고친 뒤 91%)보다 낮은 70~82%였다. 정답이 100건뿐이라 임베딩을 학습시키기엔 데이터가 적고, 긍정 ESG(기부·상생)를 다른 기사와 헷갈렸다. → ESG도 <b>키워드 규칙 유지</b>, 임베딩은 키워드가 놓친 오류를 찾는 <b>점검 도구</b>로 쓰는 게 맞다.</div><p class="small">코드: 연습장/yw_run/embed_vs_keyword.py, embed_vs_keyword_esg.py · 결과: 연습장/out_yw/embed_vs_keyword.csv (기사 제목은 저장하지 않음)</p>
 </body></html>
