@@ -42,6 +42,7 @@ def load_articles(paths: list[str]) -> pd.DataFrame:
     a["code"] = a["code"].str.replace(r"\.0$", "", regex=True).str.zfill(6)  # 종목코드는 문자열 6자리
     a["date"] = pd.to_datetime(a["date"].str[:10].str.replace("-", ""), format="%Y%m%d", errors="coerce")
     return a.dropna(subset=["date"])
+
 PROC = f"{cfg['data_dir']}/processed"
 
 """[H8] 뉴스 감성 (+, 대립 −): 뉴스 수집·정제 부분
