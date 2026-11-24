@@ -1,0 +1,114 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>이론 근거 논문 정리</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap">
+<style>
+body{font-family:'Gowun Dodum',sans-serif;font-size:10.3pt;line-height:1.72;color:#2B2B2B;margin:0;}
+.top{display:flex;justify-content:space-between;font-size:9pt;color:#7A7A7A;border-bottom:1px solid #BDBDBD;padding-bottom:1.5mm;margin-bottom:7mm;}
+h1{font-family:'Jua',sans-serif;font-weight:400;font-size:22pt;margin:0 0 1mm;color:#2E4A62;}
+.meta{font-size:9.5pt;color:#6B6B6B;margin-bottom:5mm;}
+h2{font-family:'Jua',sans-serif;font-weight:400;font-size:14pt;color:#2E4A62;margin:8mm 0 2mm;page-break-after:avoid;}
+.lead{border-top:1px solid #D5D5D5;border-bottom:1px solid #D5D5D5;padding:2.5mm 0;margin:3mm 0;}
+table{border-collapse:collapse;width:100%;margin:2mm 0;font-size:9.6pt;}
+th,td{border-bottom:1px solid #DADADA;padding:1.6mm 2mm;text-align:left;vertical-align:top;}
+th{font-family:'Jua',sans-serif;font-weight:400;color:#444;border-bottom:1.5px solid #8A9BAA;background:#F4F6F8;}
+tr{page-break-inside:avoid;}
+.paper{page-break-inside:avoid;margin:3mm 0 4mm;padding-bottom:3mm;border-bottom:1px dashed #D0D0D0;}
+.paper .t{font-family:'Jua',sans-serif;font-size:11pt;color:#2E4A62;}
+.paper .c{font-size:9.3pt;color:#666;margin:0.5mm 0 1.2mm;}
+.paper .k{display:inline-block;min-width:17mm;font-family:'Jua',sans-serif;color:#555;}
+.paper p{margin:0.8mm 0;}
+.link{font-size:8.8pt;color:#3A6A93;word-break:break-all;}
+ul{margin:1mm 0;padding-left:6mm;} li{margin:0.8mm 0;}
+</style></head><body>
+<div class="top"><span>금융데이터인텔리전스 4팀</span><span>2026. 11. 24</span></div>
+<h1>이론 근거 논문 정리</h1>
+<div class="meta">작성: 위영섭 · 1차 정리</div>
+
+<div class="lead">우리 가설 H3(목표가 상향 기사가 난 종목은 다음 달 수익률이 높다)와 H4(그중 개인 순매수가 많으면 효과가 약하다), 교수님이 말씀하신 애널리스트 탐방·기업 규모 관련 근거가 되는 논문 11편을 정리했다. 보고서에 인용할 때는 원문의 표와 숫자를 다시 확인한다.</div>
+
+<h2>한눈에 보기</h2>
+<table>
+<tr><th style="width:27%">무엇을 뒷받침하나</th><th>논문</th><th style="width:30%">우리 결과</th></tr>
+<tr><td>A. 목표가·추천 변경에 정보가 있다 (H3)</td><td>Brav &amp; Lehavy (2003), Asquith 외 (2005), Womack (1996), Barber 외 (2001), Jegadeesh 외 (2004), Gleason &amp; Lee (2003), Stickel (1995)</td><td>통제 후 +0.51%p (t 2.5)</td></tr>
+<tr><td>B. 애널리스트는 탐방으로 정보를 얻는다</td><td>Cheng 외 (2016)</td><td>목표가 상향이 새 정보를 담는 이유</td></tr>
+<tr><td>C. 개인은 뉴스 종목을 관심으로 산다 (H4)</td><td>Barber &amp; Odean (2008), Da 외 (2011)</td><td>상호작용 −1.53 (t −2.1)</td></tr>
+<tr><td>D. 작고 덜 알려진 종목은 정보가 느리게 퍼진다</td><td>Hong, Lim &amp; Stein (2000), Gleason &amp; Lee (2003)</td><td>상위 200 중 큰 1/3에서 +0.60%p</td></tr>
+</table>
+
+<h2>A. 목표가·추천 변경의 정보 효과 (H3)</h2>
+
+<div class="paper"><div class="t">1. An Empirical Analysis of Analysts' Target Prices: Short-term Informativeness and Long-term Dynamics</div>
+<div class="c">Brav, A. &amp; Lehavy, R. (2003). Journal of Finance, 58(5), 1933–1967.</div>
+<p><span class="k">내용</span>목표가가 바뀌면 시장이 유의하게 반응한다. 추천 등급과 이익 추정치 변경을 함께 고려해도 목표가 변경에 따로 정보가 있다.</p>
+<p><span class="k">연결</span>목표가 상향 효과가 정형 변수 9개를 통제한 뒤에도 남는 결과와 같은 방향.</p>
+<p class="link">https://econpapers.repec.org/RePEc:bla:jfinan:v:58:y:2003:i:5:p:1933-1967</p></div>
+
+<div class="paper"><div class="t">2. Information Content of Equity Analyst Reports</div>
+<div class="c">Asquith, P., Mikhail, M. B. &amp; Au, A. S. (2005). Journal of Financial Economics, 75(2), 245–282.</div>
+<p><span class="k">내용</span>추천, 이익 추정, 목표가 변경 가운데 목표가 변경에 대한 시장 반응이 크다. 근거가 탄탄한 보고서일수록 반응이 크다.</p>
+<p><span class="k">연결</span>여러 애널리스트 관련 기사 중 '목표가 상향'을 변수로 고른 근거.</p>
+<p class="link">https://www.nber.org/papers/w9246</p></div>
+
+<div class="paper"><div class="t">3. Do Brokerage Analysts' Recommendations Have Investment Value?</div>
+<div class="c">Womack, K. L. (1996). Journal of Finance, 51(1), 137–167.</div>
+<p><span class="k">내용</span>새 매수 추천이 나오면 주가가 바로 반응하고, 이후 몇 달 동안 같은 방향으로 더 움직인다.</p>
+<p><span class="k">연결</span>기사가 난 다음 달까지 효과가 남는 이유.</p>
+<p class="link">https://ideas.repec.org/a/bla/jfinan/v51y1996i1p137-67.html</p></div>
+
+<div class="paper"><div class="t">4. Can Investors Profit from the Prophets? Security Analyst Recommendations and Stock Returns</div>
+<div class="c">Barber, B., Lehavy, R., McNichols, M. &amp; Trueman, B. (2001). Journal of Finance, 56(2), 531–563.</div>
+<p><span class="k">내용</span>컨센서스 추천을 따르는 전략은 연 4% 이상 초과수익을 냈다(1986~1996). 다만 거래비용을 빼면 크게 줄어든다.</p>
+<p><span class="k">연결</span>애널리스트 의견을 따르는 전략의 수익성과 그 한계.</p>
+<p class="link">https://ideas.repec.org/a/bla/jfinan/v56y2001i2p531-563.html</p></div>
+
+<div class="paper"><div class="t">5. Analyzing the Analysts: When Do Recommendations Add Value?</div>
+<div class="c">Jegadeesh, N., Kim, J., Krische, S. D. &amp; Lee, C. M. C. (2004). Journal of Finance, 59(3), 1083–1124.</div>
+<p><span class="k">내용</span>추천의 수준보다 추천의 변화가 미래 수익률을 더 잘 예측한다.</p>
+<p><span class="k">연결</span>우리 변수도 '상향'이라는 변화 신호.</p>
+<p class="link">https://www.econbiz.de/Record/analyzing-the-analysts-when-do-recommendations-add-value/10005302976</p></div>
+
+<div class="paper"><div class="t">6. Analyst Forecast Revisions and Market Price Discovery</div>
+<div class="c">Gleason, C. A. &amp; Lee, C. M. C. (2003). The Accounting Review, 78(1), 193–225.</div>
+<p><span class="k">내용</span>이익 추정치가 수정된 뒤 주가는 천천히 따라간다. 애널리스트가 많이 붙은 종목일수록 빨리 반영된다.</p>
+<p><span class="k">연결</span>한 달 뒤까지 효과가 이어지는 이유(늦은 반영).</p>
+<p class="link">https://iro.uiowa.edu/esploro/outputs/journalArticle/Analyst-Forecast-Revisions-and-Market-Price/9984380448602771</p></div>
+
+<div class="paper"><div class="t">7. The Anatomy of the Performance of Buy and Sell Recommendations</div>
+<div class="c">Stickel, S. E. (1995). Financial Analysts Journal, 51(5), 25–39.</div>
+<p><span class="k">내용</span>추천은 주가에 영향을 주지만, 일부는 일시적인 가격 압력이다.</p>
+<p><span class="k">연결</span>효과 일부가 되돌려질 수 있다는 주의점.</p>
+<p class="link">https://rpc.cfainstitute.org/research/financial-analysts-journal/1995/the-anatomy-of-the-performance-of-buy-and-sell-recommendations</p></div>
+
+<h2>B. 애널리스트의 정보 수집 (탐방)</h2>
+<div class="paper"><div class="t">8. Seeing is Believing: Analysts' Corporate Site Visits</div>
+<div class="c">Cheng, Q., Du, F., Wang, X. &amp; Wang, Y. (2016). Review of Accounting Studies, 21(4), 1245–1286.</div>
+<p><span class="k">내용</span>중국 기업 탐방 자료(2009~2012)를 보면, 탐방을 다녀온 애널리스트의 이익 예측이 더 정확해진다.</p>
+<p><span class="k">연결</span>목표가 상향이 이미 알려진 정보가 아니라 탐방 등으로 얻은 정보를 담을 수 있다는 근거.</p>
+<p class="link">https://ideas.repec.org/a/spr/reaccs/v21y2016i4d10.1007_s11142-016-9368-9.html</p></div>
+
+<h2>C. 개인 투자자의 관심 매수 (H4)</h2>
+<div class="paper"><div class="t">9. All That Glitters: The Effect of Attention and News on the Buying Behavior of Individual and Institutional Investors</div>
+<div class="c">Barber, B. M. &amp; Odean, T. (2008). Review of Financial Studies, 21(2), 785–818.</div>
+<p><span class="k">내용</span>개인은 뉴스에 나오거나 거래량·수익률이 크게 움직인 종목을 순매수한다.</p>
+<p><span class="k">연결</span>목표가 상향 기사 뒤 개인 매수가 몰리면 정보가 이미 가격에 반영되어 다음 달 효과가 약해진다.</p>
+<p class="link">https://ideas.repec.org/a/oup/rfinst/v21y2008i2p785-818.html</p></div>
+
+<div class="paper"><div class="t">10. In Search of Attention</div>
+<div class="c">Da, Z., Engelberg, J. &amp; Gao, P. (2011). Journal of Finance, 66(5), 1461–1499.</div>
+<p><span class="k">내용</span>검색량(개인 관심)이 늘면 2주 동안 주가가 오르고 1년 안에 되돌아온다. 주로 작은 종목에서 나타난다.</p>
+<p><span class="k">연결</span>H4 상호작용(−1.53, t −2.1)의 근거.</p>
+<p class="link">https://econpapers.repec.org/RePEc:bla:jfinan:v:66:y:2011:i:5:p:1461-1499</p></div>
+
+<h2>D. 기업 규모와 애널리스트 수</h2>
+<div class="paper"><div class="t">11. Bad News Travels Slowly: Size, Analyst Coverage, and the Profitability of Momentum Strategies</div>
+<div class="c">Hong, H., Lim, T. &amp; Stein, J. C. (2000). Journal of Finance, 55(1), 265–295.</div>
+<p><span class="k">내용</span>작은 종목, 애널리스트가 적은 종목에서 정보가 천천히 퍼진다. 특히 나쁜 소식이 느리다.</p>
+<p><span class="k">연결</span>이론상 작은 종목에서 효과가 커야 한다. 우리는 상위 200 중 큰 1/3에서 효과가 컸는데(+0.60%p, t 2.5), 작은 1/3은 목표가 기사가 난 종목-월이 약 5%뿐이라 판단하기에 표본이 부족하다.</p>
+<p class="link">https://www.nber.org/papers/w6553</p></div>
+
+<h2>인용할 때 주의할 점</h2>
+<ul>
+<li>Hong, Lim &amp; Stein은 나쁜 소식에서 효과가 더 크다고 본다. 우리는 좋은 소식(상향)이므로 '정보가 퍼지는 속도' 논리만 빌려 쓴다.</li>
+<li>Da 외(2011)는 작은 종목 중심 결과이다. 우리 H4는 상위 200 종목이고 주로 2010년 이전에 나타나 '약하게 지지'로 표현한다.</li>
+<li>대부분 미국 자료이다. 한국 자료 연구는 KCI, RISS에서 '목표주가 수정 주가반응'으로 추가로 찾을 예정이다.</li>
+</ul>
+</body></html>
