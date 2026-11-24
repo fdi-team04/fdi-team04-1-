@@ -1,94 +1,99 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>재현성 계획</title><style>
-@font-face{font-family:NG;src:url("file:///usr/local/lib/python3.13/dist-packages/koreanize_matplotlib/fonts/NanumGothic.ttf");}
-@font-face{font-family:NG;font-weight:bold;src:url("file:///usr/local/lib/python3.13/dist-packages/koreanize_matplotlib/fonts/NanumGothicBold.ttf");}
-body{font-family:NG,sans-serif;font-size:10pt;line-height:1.68;color:#172B4D;}
-h1{font-size:19pt;margin:0 0 1mm;color:#1E4E8C;} .sub{color:#5A6B82;font-size:9.2pt;margin-bottom:4mm;}
-h2{font-size:13pt;color:#fff;background:#1E4E8C;padding:1.6mm 3mm;margin:8mm 0 3mm;page-break-after:avoid;}
-h3{font-size:11pt;color:#1E4E8C;border-bottom:1.5px solid #CBD8EA;padding-bottom:0.8mm;margin:5mm 0 1.5mm;page-break-after:avoid;}
-h4{font-size:10pt;color:#2F6FBF;margin:3mm 0 1mm;page-break-after:avoid;}
-table{border-collapse:collapse;width:100%;margin:2mm 0;font-size:9.1pt;page-break-inside:avoid;}
-th,td{border:1px solid #CBD8EA;padding:1.2mm 2mm;text-align:left;vertical-align:top;} th{background:#E9F0F9;}
-td.n{text-align:right;}
-.why{background:#F3F7FC;border-left:4px solid #2F6FBF;padding:2mm 3.5mm;margin:2mm 0;page-break-inside:avoid;}
-.why b{color:#1E4E8C;}
-.qa{border:1px solid #CBD8EA;border-radius:2mm;padding:2mm 3.5mm;margin:2mm 0;page-break-inside:avoid;}
-.qa .q{font-weight:bold;color:#C2611A;} .qa .a{margin-top:0.8mm;}
-.box{border:1px solid #CBD8EA;border-left:5px solid #1E4E8C;background:#F7FAFD;padding:2.5mm 4mm;margin:2.5mm 0;page-break-inside:avoid;}
-img{width:88%;display:block;margin:2mm auto;page-break-inside:avoid;}
-.pb{page-break-before:always;} .small{font-size:8.8pt;color:#5A6B82;}
-ol,ul{margin:1mm 0;padding-left:6mm;}
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>재현성 계획</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap">
+<style>
+body{font-family:'Gowun Dodum',sans-serif;font-size:10.5pt;line-height:1.75;color:#2B2B2B;margin:0;}
+.top{display:flex;justify-content:space-between;font-size:9pt;color:#7A7A7A;border-bottom:1px solid #BDBDBD;padding-bottom:1.5mm;margin-bottom:7mm;}
+h1{font-family:'Jua',sans-serif;font-weight:400;font-size:22pt;margin:0 0 1mm;color:#2E4A62;}
+.meta{font-size:9.5pt;color:#6B6B6B;margin-bottom:6mm;}
+h2{font-family:'Jua',sans-serif;font-weight:400;font-size:14pt;color:#2E4A62;margin:8mm 0 2mm;page-break-after:avoid;}
+p{margin:1.5mm 0;}
+.lead{border-top:1px solid #D5D5D5;border-bottom:1px solid #D5D5D5;padding:2.5mm 0;margin:3mm 0 2mm;}
+table{border-collapse:collapse;width:100%;margin:2mm 0 1mm;font-size:9.8pt;page-break-inside:avoid;}
+th,td{border-bottom:1px solid #DADADA;padding:1.6mm 2mm;text-align:left;vertical-align:top;}
+th{font-family:'Jua',sans-serif;font-weight:400;color:#444;border-bottom:1.5px solid #8A9BAA;background:#F4F6F8;}
+.note{font-size:9pt;color:#707070;margin-top:1mm;}
+ol,ul{margin:1mm 0;padding-left:6mm;} li{margin:0.8mm 0;}
+.em{font-family:'Jua',sans-serif;color:#2E4A62;}
+.blank{color:#9A9A9A;}
 </style></head><body>
-
+<div class="top"><span>금융데이터인텔리전스 4팀</span><span>2026. 11. 24</span></div>
 <h1>재현성 계획 (초안)</h1>
-<div class="sub">11/24 · 4팀 · 목표: 같은 데이터와 같은 코드로 누가 돌려도 같은 숫자가 나오게 한다</div>
+<div class="meta">작성: 위영섭</div>
 
-<div class="box"><b>한 줄 요약</b>: 발표에 쓰는 숫자 6개를 "기준값"으로 정하고, ① 데이터 파일 고정 ② 설정 고정(config.yaml, seed 42) ③ Docker 환경 고정 ④ 팀 코드 01~06 한 번에 실행 → 기준값과 비교한다. 차이가 나면 원인을 표에 적는다.</div>
+<div class="lead">같은 데이터와 같은 코드로 누가 실행해도 같은 숫자가 나오는지 확인하는 것이 목표이다. 발표에 쓰는 숫자 6개를 기준값으로 정하고, 데이터·설정·실행 환경을 고정한 뒤 팀 코드(01~06)로 다시 실행해 기준값과 비교한다.</div>
 
-<h2>1. 재현할 숫자 (기준값)</h2>
+<h2>1. 기준값</h2>
 <table>
-<tr><th style="width:5%">#</th><th>숫자</th><th style="width:17%">기준값</th><th style="width:24%">처음 낸 곳</th><th style="width:16%">허용 차이</th></tr>
-<tr><td>1</td><td>정형 9개 XGBoost 평균 IC (2011–21, 확장 학습)</td><td>0.0905</td><td>yw_run/step3_xgb_stages.py</td><td>±0.001</td></tr>
-<tr><td>2</td><td>+ 목표가 상향 변수 평균 IC / 상승 연도 수</td><td>0.0916 / 7년</td><td>yw_run/tp_fullmodel_yw.py</td><td>±0.001 / 같음</td></tr>
-<tr><td>3</td><td>상위 200 안 IC (정형 → +목표가)</td><td>0.031 → 0.035 (t 2.0)</td><td>tp_fullmodel_yw.py</td><td>±0.002</td></tr>
-<tr><td>4</td><td>목표가 상향 FM 계수 (통제 9개)</td><td>+0.51%p (t 2.5)</td><td>theme_judge_yw.py</td><td>소수 둘째 자리까지 같음</td></tr>
-<tr><td>5</td><td>2016–21 FM 계수</td><td>+0.47%p (t 1.9)</td><td>tp_recent_yw.py</td><td>같음</td></tr>
-<tr><td>6</td><td>H4 상호작용 (목표가 × 개인 순매수)</td><td>−1.53 (t −2.1)</td><td>h4_tp_retail_yw.py</td><td>같음</td></tr>
+<tr><th style="width:4%">#</th><th>항목</th><th style="width:23%">기준값</th><th style="width:24%">계산한 코드</th></tr>
+<tr><td>1</td><td>정형 9개 XGBoost 평균 IC (2011~2021, 확장 학습)</td><td>0.0905</td><td>step3_xgb_stages.py</td></tr>
+<tr><td>2</td><td>목표가 상향 추가 후 평균 IC / IC가 오른 연도</td><td>0.0916 / 11년 중 7년</td><td>tp_fullmodel_yw.py</td></tr>
+<tr><td>3</td><td>상위 200 종목 안 IC (추가 전 → 후)</td><td>0.031 → 0.035 (t 2.0)</td><td>tp_fullmodel_yw.py</td></tr>
+<tr><td>4</td><td>목표가 상향 효과, 통제 변수 9개 FM (2001~2021)</td><td>+0.51%p (t 2.5)</td><td>tp_fm_final_yw.py</td></tr>
+<tr><td>5</td><td>같은 FM, 2016~2021</td><td>+0.47%p (t 1.9)</td><td>tp_fm_final_yw.py</td></tr>
+<tr><td>6</td><td>H4 상호작용 (목표가 상향 × 개인 순매수)</td><td>−1.53 (t −2.1)</td><td>h4_tp_retail_yw.py</td></tr>
 </table>
-<p class="small">FM은 무작위성이 없어 숫자가 똑같아야 한다. XGBoost는 seed를 고정해도 버전이나 스레드 차이로 넷째 자리가 달라질 수 있어 ±0.001까지 허용한다.</p>
+<p class="note">4, 5번은 11/24 최종 변수 파일(전년 말 시가총액 상위 200, 기사 없는 달 포함)로 다시 계산해 같은 값을 확인함 (0.506, t 2.50 / 0.467, t 1.88).</p>
 
-<h2>2. 고정할 것</h2>
+<h2>2. 일치 판단 기준</h2>
 <table>
-<tr><th style="width:18%">항목</th><th>고정 방법</th><th style="width:16%">담당</th></tr>
-<tr><td>정형 데이터</td><td>예원 데이터셋 최종본. 파일명, 행 수, 기간을 적어 둠 (베타 24개월, 변동성 12개월 기준)</td><td>예원</td></tr>
-<tr><td>뉴스 변수</td><td><code>목표가상향_변수_합치기용.csv</code>: 49,985행, 479종목, tp_up=1 6,460행, sha256 앞자리 <code>3883323390f7e58e</code></td><td>영섭</td></tr>
-<tr><td>합친 input</td><td>정형 + 뉴스를 month·code로 왼쪽 합치기. 없는 행은 news_missing=1, tp_up=0 (결측 기준 문서)</td><td>예원</td></tr>
-<tr><td>설정</td><td><code>Quant/config.yaml</code>: train 2001–21, valid 2011–21, test 2022–25, seed 42, XGB(300, 깊이 4, 0.05, 0.8)</td><td>이안</td></tr>
-<tr><td>환경</td><td>Docker (<code>Quant/requirements.txt</code>, Python 3.11). 패키지 버전을 실행 기록에 남김</td><td>이안</td></tr>
-<tr><td>판정 기준</td><td>결과를 보기 전에 정한 기준 3개 (|t|≥2, 통제 후 |t|≥2, 2016–21 방향 유지) + 정밀도 80%. 정한 날짜는 git 기록으로 증명</td><td>영섭</td></tr>
+<tr><th style="width:26%">항목</th><th>판단 기준</th></tr>
+<tr><td>FM 결과 (4~6번)</td><td>입력과 방식(월별 순위 변환, 종목 30개 미만인 달 제외)이 같으면 소수 둘째 자리까지 같아야 함</td></tr>
+<tr><td>XGBoost IC (1~3번)</td><td>같은 패키지 버전이면 같은 값이 나와야 함. 버전 차이로 값이 조금 다르면, 숫자 자체보다 <span class="em">추가 후 IC가 더 높은지</span>와 <span class="em">오른 연도가 6년 이상인지</span>가 유지되는지로 판단</td></tr>
+<tr><td>결과가 다를 때</td><td>기준값을 바꾸지 않고 원인을 4장 표에 기록함. 원인을 고친 뒤에도 다르면 팀 코드 결과를 최종값으로 쓰고 발표 자료를 그에 맞춰 수정</td></tr>
+</table>
+<p class="note">참고: 1번과 2번의 차이는 +0.0010으로 작고, 월별 IC 차이로 본 t값은 1.4임. 그래서 평균 차이만이 아니라 연도별로 몇 해 올랐는지를 같이 기준으로 둠 (결과를 보기 전에 정한 기준).</p>
+
+<h2>3. 고정할 것</h2>
+<table>
+<tr><th style="width:17%">항목</th><th>내용</th><th style="width:11%">담당</th></tr>
+<tr><td>정형 데이터</td><td>예원 데이터셋으로 만든 정형 변수 파일: 182,138행, 1,043종목, 2000-01~2021-12 (베타 24개월, 변동성 12개월). 해시 앞자리 e0f0a10c3ba40784</td><td>예원</td></tr>
+<tr><td>뉴스 변수</td><td>목표가상향_변수_합치기용.csv: 49,985행, 479종목, tp_up=1인 행 6,460개. 해시 앞자리 3883323390f7e58e</td><td>영섭</td></tr>
+<tr><td>합친 입력 파일</td><td>정형 데이터에 month, code 기준 왼쪽 합치기. 뉴스 파일에 없는 행은 news_missing=1, tp_up=0. 파일명·행 수·해시는 예원님이 최종본 저장 후 기입 <span class="blank">(          )</span></td><td>예원</td></tr>
+<tr><td>설정</td><td>config.yaml: 학습 2001~2021, 검증 2011~2021, 테스트 2022~2025, seed 42, XGBoost(트리 300개, 깊이 4, 학습률 0.05, subsample 0.8)</td><td>이안</td></tr>
+<tr><td>실행 환경</td><td>Docker (requirements.txt, Python 3.11). 실행할 때 패키지 버전을 기록</td><td>이안</td></tr>
+<tr><td>판정 기준</td><td>① 다음 달 수익률 차이 |t| ≥ 2 ② 통제 변수 9개 FM |t| ≥ 2 ③ 2016~2021 방향 유지, 키워드 정밀도 80% 이상. 결과 확인 전(11/20)에 정했고 git 기록에 날짜가 남아 있음</td><td>영섭</td></tr>
 </table>
 
-<h2>3. 실행 순서</h2>
+<h2>4. 실행 순서</h2>
 <ol>
-<li><b>예원</b>: 합친 input 최종본 저장 → 파일명·행 수·sha256을 이 문서 2장에 적기</li>
-<li><b>이안</b>: <code>docker compose run --rm pipeline</code> (01~06) 실행 → 실행 날짜, 패키지 버전, 출력 IC를 남기기</li>
-<li><b>이안</b>: 정형 9개 모델과 목표가 추가 모델을 각각 돌려 1장 숫자 1~3과 비교</li>
-<li><b>같은 설정으로 한 번 더</b> 돌려 두 번 결과가 같은지 확인 (seed 고정 확인)</li>
-<li><b>아영</b>: 1장 기준값과 팀 코드 결과를 나란히 놓고 숫자 점검. 허용 차이를 넘으면 4장 표에 원인 적기</li>
+<li>예원: 합친 입력 파일 최종본 저장, 파일명·행 수·해시를 3장 표에 기입</li>
+<li>이안: 팀 코드 01~06 실행 (docker compose run --rm pipeline). 실행 날짜, 패키지 버전, 출력 IC 기록</li>
+<li>이안: 정형 9개 모델과 목표가 추가 모델을 각각 실행해 1장 1~3번과 비교</li>
+<li>같은 설정으로 한 번 더 실행해 두 결과가 같은지 확인</li>
+<li>아영: 1장 기준값과 팀 코드 결과를 나란히 놓고 점검. 2장 기준을 벗어나면 아래 표에 원인 기록</li>
 </ol>
-
-<h2>4. 차이가 날 때 확인할 곳</h2>
 <table>
-<tr><th style="width:30%">증상</th><th>먼저 볼 것</th></tr>
-<tr><td>IC가 0.001 넘게 다름</td><td>정형 데이터 버전, 변동성·베타 기간, 학습 시작 연도, XGBoost 버전</td></tr>
-<tr><td>FM 계수가 다름</td><td>통제 변수 9개가 같은지, 순위 변환 방식, 이상값 처리</td></tr>
-<tr><td>뉴스 행 수가 다름</td><td>상위 200을 정한 시점(전년 12월 말인지), 왼쪽 합치기인지</td></tr>
-<tr><td>실행할 때마다 다름</td><td>seed가 모든 곳에 들어갔는지, 스레드 수(n_jobs) 고정</td></tr>
+<tr><th style="width:30%">다를 때 증상</th><th>먼저 확인할 것</th></tr>
+<tr><td>IC가 다름</td><td>정형 데이터 버전, 베타·변동성 기간, 학습 시작 연도, XGBoost 버전</td></tr>
+<tr><td>FM 계수가 다름</td><td>통제 변수 9개가 같은지, 순위 변환 방식, 결측 처리</td></tr>
+<tr><td>뉴스 행 수가 다름</td><td>상위 200을 정한 시점(전년 12월 말), 왼쪽 합치기 여부</td></tr>
+<tr><td>실행할 때마다 다름</td><td>seed가 모든 단계에 들어갔는지, 스레드 수 고정 여부</td></tr>
 </table>
 
 <h2>5. 미래 정보 점검 (예원)</h2>
 <table>
-<tr><th style="width:5%">✓</th><th>점검 항목</th><th style="width:34%">지금 상태</th></tr>
-<tr><td>☐</td><td>뉴스: 그달 마지막 거래일 전 기사만 그달에 넣었나</td><td>그렇게 만듦. 그 뒤 기사는 다음 달로</td></tr>
-<tr><td>☐</td><td>뉴스 수집 대상: 전년 12월 말 시총 상위 200</td><td>11/23 고침 (아영 지적)</td></tr>
-<tr><td>☐</td><td>예측 대상은 다음 달 수익률, 변수는 이달 말까지 정보</td><td>config 기준</td></tr>
-<tr><td>☐</td><td>평균 같은 통계는 train 기간 안에서만 계산</td><td>결측 기준 문서에 적힘</td></tr>
-<tr><td>☐</td><td>키워드 규칙과 판정 기준은 결과를 보기 전에 정함</td><td>git 날짜로 확인 가능</td></tr>
+<tr><th style="width:7%">확인</th><th>점검 항목</th><th style="width:34%">현재 상태</th></tr>
+<tr><td>☐</td><td>그달 마지막 거래일 전 기사만 그달 변수에 넣었는가</td><td>그렇게 만듦. 이후 기사는 다음 달로</td></tr>
+<tr><td>☐</td><td>뉴스 수집 대상이 전년 12월 말 시가총액 상위 200인가</td><td>11/23 수정 (아영님 지적)</td></tr>
+<tr><td>☐</td><td>예측 대상은 다음 달 수익률, 변수는 이달 말까지의 정보인가</td><td>config 기준</td></tr>
+<tr><td>☐</td><td>평균 등 통계는 학습 기간 안에서만 계산했는가</td><td>결측 처리 기준에 명시</td></tr>
+<tr><td>☐</td><td>키워드 규칙과 판정 기준을 결과 확인 전에 정했는가</td><td>git 날짜로 확인 가능</td></tr>
 </table>
 
-<h2>6. 다른 사람이 재현할 수 없는 부분 (솔직히 적기)</h2>
+<h2>6. 외부에서 재현할 수 없는 부분</h2>
 <ul>
-<li><b>빅카인즈 기사 원문과 제목</b>은 공개할 수 없다 → 기사 → 변수로 바꾸는 코드(키워드 규칙)와 결과 변수 파일은 공개해 둔다.</li>
-<li><b>사람 판정 50건</b>은 판정 결과만 남기고 기사 제목은 공개하지 않는다.</li>
-<li><b>2022년 이후 뉴스</b>는 아직 없다. 2022년 예측을 하려면 같은 방식으로 수집해야 한다(교수님 확인 필요).</li>
-<li>키워드가 놓친 기사 비율(재현율)은 아직 재지 못했다.</li>
+<li>빅카인즈 기사 원문과 제목은 이용 조건상 공개하지 않음. 대신 기사를 변수로 바꾸는 코드(키워드 규칙)와 결과 변수 파일을 공개함</li>
+<li>사람이 확인한 50건은 판정 결과만 남기고 기사 제목은 공개하지 않음</li>
+<li>2022년 이후 뉴스는 아직 수집하지 않음. 테스트 기간(2022~)에 쓰려면 같은 방식으로 수집해야 하며 교수님 확인이 필요함</li>
+<li>사람 확인 표본이 키워드에 걸린 기사여서, 키워드가 놓친 기사 비율(재현율)은 아직 측정하지 못함</li>
 </ul>
 
 <h2>7. 일정</h2>
 <table>
-<tr><th style="width:18%">언제</th><th>할 일</th><th style="width:18%">담당</th></tr>
-<tr><td>11/24 (화)</td><td>합친 input 최종본, 미래 정보 점검표</td><td>예원</td></tr>
-<tr><td>11/24 (화)</td><td>01~06 통합 실행, IC 재현</td><td>이안</td></tr>
+<tr><th style="width:20%">날짜</th><th>할 일</th><th style="width:14%">담당</th></tr>
+<tr><td>11/24 (화)</td><td>합친 입력 파일 최종본, 미래 정보 점검</td><td>예원</td></tr>
+<tr><td>11/24 (화)</td><td>팀 코드 01~06 실행, IC 재현</td><td>이안</td></tr>
 <tr><td>11/24 (화) 밤</td><td>기준값과 비교, 숫자 점검</td><td>아영</td></tr>
-<tr><td>11/25 (수)</td><td>브리핑: 재현 결과 한 장으로 보고</td><td>영섭</td></tr>
+<tr><td>11/25 (수)</td><td>브리핑에서 재현 결과 보고</td><td>영섭</td></tr>
 </table>
 </body></html>
