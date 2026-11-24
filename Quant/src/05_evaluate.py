@@ -13,7 +13,6 @@ universe: all = 전체 종목, top200 = 뉴스 수집 대상(news_missing = 0). 
 period: valid = 검증 행(~2021-11), test = test 행(2021-12~, 04 --final일 때만 있음). 두 구간은 따로 요약한다.
 """
 import os
-
 import matplotlib
 import numpy as np
 import pandas as pd
@@ -54,12 +53,10 @@ def monthly_ic(pred: pd.DataFrame) -> pd.DataFrame:
         rows.append({"universe": uni, "period": period, "stage": stage, "month": month, "ic": ic, "n_stocks": len(g)})
     return pd.DataFrame(rows)
 
-
 def ic_summary(ic: pd.DataFrame) -> pd.DataFrame:
     """평균 IC, IC가 양(+)인 달의 비율, 가장 낮은 IC(급반등 국면 점검), 달 수"""
     g = ic.dropna(subset=["ic"]).groupby(["universe", "period", "stage"])["ic"]
     return g.agg(mean_ic="mean", pos_ratio=lambda v: (v > 0).mean(), min_ic="min", n_months="size").reset_index()
-
 
 def ic_by_year(ic: pd.DataFrame) -> pd.DataFrame:
     """연도별 평균 IC (판정의 '오른 해' 계산과 같은 표)"""
