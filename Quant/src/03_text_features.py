@@ -50,8 +50,16 @@ def load_news(raw_dir, codes):
     parts = []
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")  # openpyxl 스타일 경고(빅카인즈 파일 형식) 무시
-        for f in sorted(glob.glob(os.path.join(raw_dir, "*.xlsx"))):
-            d = pd.read_excel(f, usecols=lambda c: c in cols)
+        try:
+            import python_calamine  # noqa: F401
+            engine = "calamine"
+        except ImportError:
+            engine = None
+        files = sorted(glob.glob(os.path.join(raw_dir, "*.xlsx")))
+        for k, f in enumerate(files, 1):
+            if k % 25 == 0 or k == len(files):
+                print(f"[load_news] {k}/{len(files)} 파일 읽는 중", flush=True)
+            d = pd.read_excel(f, usecols=lambda c: c in cols, engine=engine)
             d = d.rename(columns=cols)
             for c in cols.values():
                 if c not in d.columns:
@@ -83,7 +91,25 @@ def load_name_dict(path="data/processed/company_list.csv"):
              r[clast] if pd.notna(r[clast]) else None))
     return nd
 
-def clean_news(df, name_dict):
+
+def dedupe_news(df):
+    t_all = df["title"].fillna("").astype(str).str.replace("車", "차")
+    flag = df["excluded_flag"].fillna("").astype(str)
+    ok = (~flag.str.contains("중복|예외")) & df["date"].notna()
+    del flag
+    key = pd.DataFrame({"title": t_all[ok], "outlet": df["outlet"][ok], "date": df["date"][ok]})
+    keep_idx = key.drop_duplicates().index
+    del key
+    d = df.loc[keep_idx].copy()
+    d["title"] = t_all.loc[keep_idx]
+    del t_all
+    d["body"] = d["body"].fillna("").astype(str).str.replace("車", "차")
+    d = d.reset_index(drop=True)
+    print(f"[dedupe_news] 제거·중복 정리 후 기사: {len(d)}건", flush=True)
+    return d
+
+
+def clean_news(df, name_dict, already_deduped=False):
     """[H8] 분석제외·중복 제거와 제목 기준 종목 매칭 (+, 대립 −)
 
     입력: df — load_news 출력.
@@ -102,15 +128,7 @@ def clean_news(df, name_dict):
     """
     import re
 
-    d = df.copy()
-    d["title"] = d["title"].fillna("").astype(str).str.replace("車", "차")
-    d["body"] = d["body"].fillna("").astype(str).str.replace("車", "차")
-    # ① 분석제외 표시('중복', '예외')가 있는 기사 제거
-    flag = d["excluded_flag"].fillna("").astype(str)
-    d = d[~flag.str.contains("중복|예외")]
-    # ② (제목, 언론사, 일자)가 같은 기사 제거
-    d = d.dropna(subset=["date"]).drop_duplicates(["title", "outlet", "date"])
-    d = d.reset_index(drop=True)
+    d = (df.copy() if already_deduped else dedupe_news(df)).reset_index(drop=True)
     d["_ym"] = d["date"].dt.strftime("%Y-%m")
 
     # 이름 → [(종목코드, first, last)] 로 뒤집는다 (같은 이름이 여러 종목에 쓰인 경우 대비)
@@ -134,12 +152,15 @@ def clean_news(df, name_dict):
     for n, recs in by_name.items():
         # n 을 포함하는 더 긴 다른 회사명 (SK → SKC, SK가스 ...)
         longer = [m for m in all_names if len(m) > len(n) and n in m]
-        titles = d["title"]
+        cand = d[d["title"].str.contains(n, regex=False)]
+        if cand.empty:
+            continue
+        titles = cand["title"]
         if longer:
             mask_pat = "|".join(re.escape(m) for m in longer)  # 긴 이름부터 지운다
             titles = titles.str.replace(mask_pat, " ", regex=True)
         pat = edge_l + re.escape(n) + edge_r
-        hit = d[titles.str.contains(pat, regex=True)]
+        hit = cand[titles.str.contains(pat, regex=True)]
         if hit.empty:
             continue
         # 기사 날짜가 해당 종목의 기간 안인지 확인
@@ -159,7 +180,6 @@ def clean_news(df, name_dict):
             if len(rows):
                 out.append(hit.loc[rows].assign(code=code))
     print(f"[clean_news] 같은 이름이 두 종목에 겹쳐 뺀 기사: {n_ambiguous}건")
-
     cols = ["code", "date", "title", "body"]
     if not out:
         return pd.DataFrame(columns=cols)
@@ -178,7 +198,7 @@ def assign_month(df, trading_days):
     """
     td = pd.to_datetime(pd.Series(list(trading_days)))
     last_td = td.groupby(td.dt.to_period("M")).max()  # 월별 마지막 거래일
-    
+
     d = df.copy()
     d["date"] = pd.to_datetime(d["date"])
     per = d["date"].dt.to_period("M")
