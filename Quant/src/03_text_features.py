@@ -42,6 +42,96 @@ def load_articles(paths: list[str]) -> pd.DataFrame:
     a["code"] = a["code"].str.replace(r"\.0$", "", regex=True).str.zfill(6)  # 종목코드는 문자열 6자리
     a["date"] = pd.to_datetime(a["date"].str[:10].str.replace("-", ""), format="%Y%m%d", errors="coerce")
     return a.dropna(subset=["date"])
+PROC = f"{cfg['data_dir']}/processed"
+
+"""[H8] 뉴스 감성 (+, 대립 −): 뉴스 수집·정제 부분
+
+담당: 정아영(B1). 점수 산출(score_sentiment, news_sentiment)은 하이안(B2)이 이어서 작성한다.
+
+이론: 기업 관련 기사에 담긴 정보는 이후 실적을 예측하지만 주가가 즉시 다 반영하지 못한다
+      (Tetlock, Saar-Tsechansky & Macskassy, 2008). 대립 가설은 비관적 논조 뒤 되돌림(Tetlock, 2007).
+자료: D5 빅카인즈 경제지 5곳(머니투데이, 매일경제, 파이낸셜뉴스, 서울경제, 한국경제), 연 단위 엑셀.
+이용 조건: 기사 원문은 이용약관상 재배포 제한 → 저장소와 제출물에 올리지 않는다(data/raw는 .gitignore).
+           수업·학술 목적으로만 쓰고 모형은 추가 학습하지 않는다(두 담당 교수님 회신, 2026-10-18).
+"""
+
+
+def load_news(raw_dir, codes):
+    """[H8] 뉴스 원자료 적재 (+, 대립 −)
+
+    이론: 위 모듈 설명 참조.
+    입력: raw_dir — data/raw/news/ 아래 빅카인즈 엑셀(연 단위 파일).
+          codes — 대상 종목코드 목록(6자리 문자열, 앞자리 0 유지).
+    출력: DataFrame(date, outlet, title, body, excluded_flag, source_file)
+    규칙: 일자는 YYYYMMDD(시각 없음). 본문은 200자 이내만 제공된다.
+    시점: t월 말까지 공개된 기사만 이후 단계에서 쓴다(여기서는 적재만).
+    """
+    import glob
+    import os
+    import warnings
+
+    cols = {"일자": "date", "언론사": "outlet", "제목": "title",
+            "본문": "body", "분석제외 여부": "excluded_flag"}
+    parts = []
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")  # openpyxl 스타일 경고(빅카인즈 파일 형식) 무시
+        try:
+            import python_calamine  # noqa: F401
+            engine = "calamine"
+        except ImportError:
+            engine = None
+        files = sorted(glob.glob(os.path.join(raw_dir, "*.xlsx")))
+        for k, f in enumerate(files, 1):
+            if k % 25 == 0 or k == len(files):
+                print(f"[load_news] {k}/{len(files)} 파일 읽는 중", flush=True)
+            d = pd.read_excel(f, usecols=lambda c: c in cols, engine=engine)
+            d = d.rename(columns=cols)
+            for c in cols.values():
+                if c not in d.columns:
+                    d[c] = pd.NA
+            d["source_file"] = os.path.basename(f)
+            parts.append(d)
+    if not parts:
+        raise FileNotFoundError(f"{raw_dir}에 xlsx 파일이 없다")
+    df = pd.concat(parts, ignore_index=True)
+    df["date"] = pd.to_datetime(df["date"].astype(str).str[:8], format="%Y%m%d", errors="coerce")
+    return df[["date", "outlet", "title", "body", "excluded_flag", "source_file"]]
+
+
+def load_name_dict(path="data/processed/company_list.csv"):
+    """company_list.csv → {종목코드: [(회사명, first_month, last_month), ...]}
+    열 이름은 code/name/first_month/last_month 를 기본으로 하고, 비슷한 이름도 받는다.
+    first_month, last_month 는 'YYYY-MM' 문자열, 비어 있으면 제한 없음."""
+    cl = pd.read_csv(path, dtype=str, encoding="utf-8")
+    pick = lambda *c: next(x for x in c if x in cl.columns)
+    ccode = pick("code", "stock_code", "종목코드")
+    cname = pick("name", "company_name", "회사명")
+    cfirst = pick("first_month", "first", "시작월")
+    clast = pick("last_month", "last", "종료월")
+    nd = {}
+    for _, r in cl.iterrows():
+        code = str(r[ccode]).zfill(6)  # 종목코드는 문자열 6자리
+        nd.setdefault(code, []).append(
+            (r[cname], r[cfirst] if pd.notna(r[cfirst]) else None,
+             r[clast] if pd.notna(r[clast]) else None))
+    return nd
+
+
+def dedupe_news(df):
+    t_all = df["title"].fillna("").astype(str).str.replace("車", "차")
+    flag = df["excluded_flag"].fillna("").astype(str)
+    ok = (~flag.str.contains("중복|예외")) & df["date"].notna()
+    del flag
+    key = pd.DataFrame({"title": t_all[ok], "outlet": df["outlet"][ok], "date": df["date"][ok]})
+    keep_idx = key.drop_duplicates().index
+    del key
+    d = df.loc[keep_idx].copy()
+    d["title"] = t_all.loc[keep_idx]
+    del t_all
+    d["body"] = d["body"].fillna("").astype(str).str.replace("車", "차")
+    d = d.reset_index(drop=True)
+    print(f"[dedupe_news] 제거·중복 정리 후 기사: {len(d)}건", flush=True)
+    return d
 
 
 def assign_month(dates: pd.Series, last_days: pd.Series) -> pd.Series:
