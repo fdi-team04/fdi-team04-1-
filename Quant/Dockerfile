@@ -2,10 +2,8 @@ FROM python:3.11-slim
 # Colab과 버전 맞추기
 
 WORKDIR /app
-ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 HF_HOME=/cache/hf
+ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
 
-# CPU 전용 torch 먼저 → requirements의 torch 줄은 이미 설치된 걸로 처리됨
-RUN pip install torch==2.15.0 --index-url https://download.pytorch.org/whl/cpu
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 

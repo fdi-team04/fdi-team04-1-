@@ -1,13 +1,13 @@
 # 프로젝트 공통 설정: 모든 src 파일이 여기서 읽음
-periods:
+periods:   # 수익률(자료) 달 기준. 행(month)의 target은 다음 달 수익률이라 2021-12 행부터 test에 속한다(04 TEST_ROW)
   warmup: ["2000-01", "2000-12"]
   train:  ["2001-01", "2021-12"]
-  valid:  ["2011-01", "2021-12"]   # train 안에서 IC를 계산하는 구간
+  valid:  ["2011-01", "2021-12"]   # train 안에서 IC를 계산하는 구간 (검증 행: 2011-01 ~ 2021-11)
   test:   ["2022-01", "2025-12"]
 data_dir: /content/data            # docker-compose에서 연결한 경로
+articles: [processed/articles_clean.csv]   # 03 입력: 아영 정리 기사(data_dir 기준). 2022–2025분이 생기면 목록에 추가
+model_input: processed/model_input.csv     # 04·06 입력: 예원 합친 파일(v2 정형 + tp_up + news_missing). v2만 적으면 정형 단계(0~3)만 돈다
 seed: 42
-text_model: snunlp/KR-FinBert-SC
-text_model_rev:                    # 03이 처음 점수를 낼 때 출력하는 모델 커밋 해시를 적어 버전 고정 (비우면 그때의 최신본)
-tables_dir: tables                 # 저장소에 올리는 작은 표: 종목·월 뉴스 표, 마지막 거래일, 수집 기록 (원문 없음)
+tables_dir: tables                 # 저장소에 올리는 작은 표: 목표가 종목·월 표, 마지막 거래일 (원문 없음)
 xgb: {n_estimators: 300, max_depth: 4, learning_rate: 0.05, subsample: 0.8}
 test_refit: yearly                 # 교수님 답변 후 확정
