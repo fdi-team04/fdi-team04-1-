@@ -1,0 +1,182 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>정형 피처 추가 검토</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap">
+<style>
+body{font-family:'Gowun Dodum',sans-serif;font-size:10.3pt;line-height:1.72;color:#2B2B2B;margin:0;}
+.top{display:flex;justify-content:space-between;font-size:9pt;color:#7A7A7A;border-bottom:1px solid #BDBDBD;padding-bottom:1.5mm;margin-bottom:7mm;}
+h1{font-family:'Jua',sans-serif;font-weight:400;font-size:22pt;margin:0 0 1mm;color:#2E4A62;}
+.meta{font-size:9.5pt;color:#6B6B6B;margin-bottom:5mm;}
+h2{font-family:'Jua',sans-serif;font-weight:400;font-size:14pt;color:#2E4A62;margin:8mm 0 2mm;page-break-after:avoid;}
+.lead{border-top:1px solid #D5D5D5;border-bottom:1px solid #D5D5D5;padding:2.5mm 0;margin:3mm 0;}
+table{border-collapse:collapse;width:100%;margin:2mm 0;font-size:9.6pt;}
+th,td{border-bottom:1px solid #DADADA;padding:1.6mm 2mm;text-align:left;vertical-align:top;}
+th{font-family:'Jua',sans-serif;font-weight:400;color:#444;border-bottom:1.5px solid #8A9BAA;background:#F4F6F8;}
+tr{page-break-inside:avoid;}
+.paper{page-break-inside:avoid;margin:3mm 0 4mm;padding-bottom:3mm;border-bottom:1px dashed #D0D0D0;}
+.paper .t{font-family:'Jua',sans-serif;font-size:11pt;color:#2E4A62;}
+.paper .c{font-size:9.3pt;color:#666;margin:0.5mm 0 1.2mm;}
+.paper .k{display:inline-block;min-width:17mm;font-family:'Jua',sans-serif;color:#555;}
+.paper p{margin:0.8mm 0;}
+.link{font-size:8.8pt;color:#3A6A93;word-break:break-all;}
+ul{margin:1mm 0;padding-left:6mm;} li{margin:0.8mm 0;}
+.pass{color:#1F6E3A;font-family:'Jua',sans-serif;} .fail{color:#9A9A9A;} .mid{color:#9A5B22;font-family:'Jua',sans-serif;} img{width:100%;margin:2mm 0;} .warn{background:#FBF3E8;border-radius:3mm;padding:2.5mm 4mm;margin:2mm 0;page-break-inside:avoid;} h3{font-family:'Jua',sans-serif;font-weight:400;font-size:11pt;color:#555;margin:3.5mm 0 1mm;} .pb{page-break-before:always;}</style></head><body>
+<div class="top"><span>금융데이터인텔리전스 4팀</span><span>2026. 11. 25</span></div>
+<h1>정형 피처 추가 검토</h1>
+<div class="meta">작성: 위영섭 · 판정 기준은 결과 보기 전에 git에 기록 (11/25 16:08, 기록/피처판정기준_1125.md)</div>
+
+<div class="lead"><span class="em">한 장 요약</span><br>
+① 가진 데이터(교수님 기본 데이터, pykrx PBR·투자자 순매수, CD금리)로 새 피처 <b>14개</b>를 만들어 목표가 상향 때와 같은 판정 절차로 확인했다.<br>
+② 네 단계를 모두 통과한 것은 <b>고유변동성 1개</b>. 회귀(t −3.4)와 비선형 모델 4개에서 모두 IC를 올렸다.<br>
+③ 6개월 모멘텀, 52주 고점 근접, 장기 반전, 최대 월수익률, 장부가치 성장 5개는 <b>모델 IC는 올리지만 회귀로는 설명되지 않는 '모델 보조 후보'</b>.<br>
+④ 계절성, 상승 비율, 주가 수준, 개인·외국인 3개월 순매수, 왜도, 금리(거시) 변수는 <b>제외</b>.<br>
+⑤ 고유변동성 + 6개월 모멘텀을 더하면 XGBoost IC <b>0.0916 → 0.0964 (t 3.2, 11년 중 9년)</b>. 목표가 상향이 올린 폭(+0.0011)의 4배 이상. 다만 같은 기간으로 고르고 평가해서 <b>2022년 이후 데이터로 다시 확인해야 한다</b>.<br>
+⑥ 교수님 질문(상향 − 하향): 하향은 다음 달 효과가 없어(t −0.7) 순지표는 회귀 기준 미달(t 1.9). <b>상향만 쓰는 게 맞다</b>.</div>
+
+<h2>1. 판정 기준 (목표가 상향과 같은 방식 + 모델 강건성 추가)</h2>
+<table>
+<tr><th style="width:14%">단계</th><th>기준</th><th style="width:30%">왜</th></tr>
+<tr><td>A1 회귀</td><td>정형 9개를 통제한 Fama-MacBeth, 2001–2021, |t| ≥ 2, 부호가 이론 방향과 같음</td><td>다른 변수로 설명되지 않는 자기만의 효과가 있는가</td></tr>
+<tr><td>A2 최근</td><td>2016–2021에도 같은 부호</td><td>예전에만 있던 효과가 아닌가</td></tr>
+<tr><td>B XGBoost</td><td>현재 모델(정형 9개 + 목표가)에 더해서 평균 IC 상승 + 11년 중 6년 이상 상승</td><td>실제 예측력이 오르는가</td></tr>
+<tr><td>C 강건성 <span class="mid">(새로 추가)</span></td><td>비선형 4개(XGBoost, LightGBM, 랜덤포레스트, 신경망) 중 3개 이상에서 평균 IC 상승</td><td>목표가 상향이 모델에 따라 흔들렸던 경험을 반영</td></tr>
+<tr><td>최종</td><td colspan="2">전부 통과 = <span class="pass">채택</span> · B와 C만 = <span class="mid">모델 보조 후보</span> · 그 외 = <span class="fail">제외</span></td></tr>
+</table>
+
+<h2>2. 쓸 수 있는 데이터</h2>
+<table>
+<tr><th style="width:24%">데이터</th><th>들어 있는 것</th><th style="width:30%">만들 수 있는 피처</th></tr>
+<tr><td>교수님 기본 데이터</td><td>월 수익률, 종가, 상장주식수, 시가총액, 종목명·코드</td><td>모멘텀 변형, 반전, 52주 고점, 최대 수익률, 왜도, 계절성, 주가 수준, 고유변동성</td></tr>
+<tr><td>pykrx (팀이 받은 것)</td><td>PBR·BPS, 개인·외국인 순매수 금액</td><td>순매수 누적, 장부가치 성장</td></tr>
+<tr><td>CD 91일 금리</td><td>월별 금리 (모든 종목에 같은 값)</td><td>금리 변화 × 베타·규모 (상호작용으로만 의미)</td></tr>
+<tr><td>없는 것</td><td colspan="2">거래량·거래대금, 업종 분류, 재무제표(이익·자산), 일별 가격 → 6장 아이디어로 정리. 이 환경에서는 KRX·DART 접속이 막혀 직접 받지 못함</td></tr>
+</table>
+<p class="note">거시 변수 한계: 금리처럼 그달 모든 종목에 같은 값은 종목 순위를 바꾸지 못한다. 그래서 "금리가 오를 때 고베타 종목이 덜 오르나"처럼 다른 변수와 곱해서만 의미가 있다.</p>
+
+<h2>3. 후보 피처 14개</h2>
+<table>
+<tr><th style="width:17%">피처</th><th>계산 (모두 그달 말까지 정보)</th><th style="width:7%">방향</th><th style="width:30%">근거 논문</th></tr>
+<tr><td>6개월 모멘텀</td><td>최근 6개월 누적 수익률 (이번 달 제외)</td><td>+</td><td>Jegadeesh &amp; Titman (1993), JF</td></tr>
+<tr><td>장기 반전</td><td>13~36개월 전 누적 수익률</td><td>−</td><td>De Bondt &amp; Thaler (1985), JF</td></tr>
+<tr><td>52주 고점 근접</td><td>수익률 지수 / 최근 12개월 최고치</td><td>+</td><td>George &amp; Hwang (2004), JF</td></tr>
+<tr><td>최대 월수익률</td><td>최근 12개월 중 가장 높은 월수익률</td><td>−</td><td>Bali, Cakici &amp; Whitelaw (2011), JFE</td></tr>
+<tr><td>수익률 왜도</td><td>최근 12개월 월수익률의 왜도</td><td>−</td><td>Boyer, Mitton &amp; Vorkink (2010), RFS</td></tr>
+<tr><td>같은 달 계절성</td><td>1~5년 전 같은 달 수익률 평균</td><td>+</td><td>Heston &amp; Sadka (2008), JFE</td></tr>
+<tr><td>상승한 달 비율</td><td>최근 12개월 중 오른 달 비율</td><td>+</td><td>Da, Gurun &amp; Warachka (2014), RFS</td></tr>
+<tr><td>주가 수준</td><td>log(종가)</td><td>+</td><td>Kumar (2009), JF 복권형 주식</td></tr>
+<tr><td>고유변동성</td><td>24개월 시장모형 잔차의 표준편차</td><td>−</td><td>Ang, Hodrick, Xing &amp; Zhang (2006), JF</td></tr>
+<tr><td>개인 3개월 순매수</td><td>최근 3개월 개인 순매수 / 시총 합</td><td>−</td><td>Barber &amp; Odean (2008), RFS</td></tr>
+<tr><td>외국인 3개월 순매수</td><td>최근 3개월 외국인 순매수 / 시총 합</td><td>±</td><td>Choe, Kho &amp; Stulz (2005), RFS</td></tr>
+<tr><td>장부가치 성장</td><td>BPS × 주식수의 12개월 증가율</td><td>−</td><td>Cooper, Gulen &amp; Schill (2008), JF</td></tr>
+<tr><td>금리 변화 × 베타</td><td>CD금리 3개월 변화, 베타 효과와의 관계</td><td>±</td><td>Frazzini &amp; Pedersen (2014), JFE</td></tr>
+<tr><td>금리 변화 × 규모</td><td>같은 방식, 규모 효과와의 관계</td><td>±</td><td>-</td></tr>
+</table>
+
+<h2 class="pb">4. 판정 결과</h2>
+<h3>B 단계: XGBoost에 하나씩 더했을 때 IC 변화</h3>
+<img src="feat_fig/stageB.png" alt="피처별 XGBoost IC 변화">
+<h3>전체 판정표</h3>
+<table>
+<tr><th style="width:15%">피처</th><th style="width:15%">A1 회귀 t</th><th style="width:10%">A2</th><th style="width:16%">B XGBoost</th><th>C 다른 모델 (IC 변화 ×0.001)</th><th style="width:13%">판정</th></tr>
+<tr><td>고유변동성</td><td>−3.4 ✓</td><td>✓</td><td>+2.5, 6년 ✓</td><td>LGBM +3.0 · RF +3.1 · 신경망 +1.7 → 4/4 ✓</td><td class="pass">채택</td></tr>
+<tr><td>6개월 모멘텀</td><td>−1.5 (반대 부호)</td><td>✓</td><td>+3.5, 8년 ✓</td><td>LGBM +2.9 · RF +0.1 · 신경망 +1.3 → 4/4 ✓</td><td class="mid">모델 보조</td></tr>
+<tr><td>52주 고점 근접</td><td>1.0</td><td>✓</td><td>+2.3, 7년 ✓</td><td>+1.3 · +0.8 · +2.0 → 4/4 ✓</td><td class="mid">모델 보조</td></tr>
+<tr><td>장기 반전</td><td>0.6 (반대 부호)</td><td>✗</td><td>+1.3, 7년 ✓</td><td>+0.7 · +0.7 · +1.4 → 4/4 ✓</td><td class="mid">모델 보조</td></tr>
+<tr><td>최대 월수익률</td><td>−0.6</td><td>✓</td><td>+0.4, 6년 ✓</td><td>+0.8 · +0.5 · +1.6 → 4/4 ✓</td><td class="mid">모델 보조</td></tr>
+<tr><td>장부가치 성장</td><td>0.1</td><td>✗</td><td>+0.7, 8년 ✓</td><td>+2.2 · +0.4 · +1.5 → 4/4 ✓</td><td class="mid">모델 보조</td></tr>
+<tr><td>수익률 왜도</td><td>−1.5</td><td>✓</td><td>+0.3, 8년 ✓</td><td>+0.9 · −0.1 · −0.8 → 2/4</td><td class="fail">제외</td></tr>
+<tr><td>외국인 3개월 순매수</td><td>−0.8</td><td>✗</td><td>+0.9, 4년 ✗</td><td>-</td><td class="fail">제외</td></tr>
+<tr><td>개인 3개월 순매수</td><td>−0.3</td><td>✓</td><td>+0.7, 4년 ✗</td><td>-</td><td class="fail">제외</td></tr>
+<tr><td>상승한 달 비율</td><td>0.1</td><td>✓</td><td>+0.6, 5년 ✗</td><td>-</td><td class="fail">제외</td></tr>
+<tr><td>주가 수준</td><td>−1.0 (반대 부호)</td><td>✓</td><td>−0.1 ✗</td><td>-</td><td class="fail">제외</td></tr>
+<tr><td>같은 달 계절성</td><td>0.9</td><td>✓</td><td>−0.4 ✗</td><td>-</td><td class="fail">제외</td></tr>
+<tr><td>금리 변화 × 베타</td><td>−1.1</td><td>✗</td><td>−1.8 ✗</td><td>-</td><td class="fail">제외</td></tr>
+<tr><td>금리 변화 × 규모</td><td>0.4</td><td>✗</td><td>-</td><td>-</td><td class="fail">제외</td></tr>
+</table>
+<div class="warn"><b>읽을 때 주의</b><br>
+· C 기준(평균이 조금이라도 오르면 통과)은 생각보다 느슨했다. 여러 모델에서 <b>t 2를 넘은 것은 고유변동성뿐</b>이고(XGBoost 2.6, LightGBM 2.8, 랜덤포레스트 2.1), 나머지 '모델 보조' 피처는 대부분 t 1 안팎이다.<br>
+· <b>고유변동성과 6개월 모멘텀은 기존 변수의 다른 버전</b>이다(총변동성, 12–2개월 모멘텀). 완전히 새로운 정보라기보다 기존 변수를 더 정확히 재는 쪽에 가깝다.<br>
+· 6개월 모멘텀은 회귀에서는 오히려 음수(한국 시장의 단기 반전과 섞임)인데 모델에서는 IC를 올린다. 기존 모멘텀과 같이 쓸 때 구간별로 작동하는 비선형 효과로 보인다.</div>
+
+<h2>5. 여러 개를 한꺼번에 넣으면</h2>
+<img src="feat_fig/bundle.png" alt="모델별 평균 IC: 현재 모델, 고유변동성과 6개월 모멘텀 추가, B 통과 7개 추가">
+<table>
+<tr><th style="width:18%">모델</th><th style="width:16%">현재</th><th>+ 고유변동성·6개월 모멘텀</th><th>+ B 통과 7개 전부</th></tr>
+<tr><td>XGBoost</td><td>0.0916</td><td>0.0964 (t 3.2, 9/11년)</td><td>0.0978 (t 3.1, 8/11년)</td></tr>
+<tr><td>LightGBM</td><td>0.0913</td><td>0.0973 (t 3.8, 10/11년)</td><td>0.0990 (t 3.8, 10/11년)</td></tr>
+<tr><td>랜덤포레스트</td><td>0.0942</td><td>0.0970 (t 2.0, 7/11년)</td><td>0.0974 (t 2.0, 7/11년)</td></tr>
+<tr><td>신경망</td><td>0.0920</td><td>0.0947 (t 0.9, 8/11년)</td><td>0.0933 (t 0.4, 6/11년)</td></tr>
+<tr><td>릿지 (선형)</td><td>0.0847</td><td>0.0887 (t 2.9, 10/11년)</td><td>0.0908 (t 3.0, 9/11년)</td></tr>
+</table>
+<div class="warn"><b>선택 편향 주의</b>: 피처를 고른 기간(2011–2021)과 성능을 잰 기간이 같다. 14개 중 잘 나온 것만 골랐으니 성능이 실제보다 좋게 보일 수 있다. 그래서 <b>① 2022년 이후 데이터로 다시 확인</b>하거나, <b>② 2011–2016으로 고르고 2017–2021로 확인</b>하는 단계를 거친 뒤에 최종 모델에 넣어야 한다. 그 전까지는 "후보"로만 부른다.</div>
+
+<h2>6. 교수님 질문: 목표가 상향 − 하향 순지표</h2>
+<table>
+<tr><th style="width:26%">변수</th><th style="width:22%">회귀 (통제 후)</th><th style="width:16%">2016–21</th><th>XGBoost IC (정형 9개 0.0905 대비)</th></tr>
+<tr><td>상향만 (현재)</td><td>+0.51%p, t 2.5 ✓</td><td>+0.47</td><td>0.0916 (+0.0010, 7/11년)</td></tr>
+<tr><td>하향만</td><td>−0.24%p, t −0.7 ✗</td><td>+0.02</td><td>-</td></tr>
+<tr><td>순지표 (상향 − 하향)</td><td>+0.32%p, t 1.9 ✗</td><td>+0.17</td><td>0.0919 (+0.0013, 9/11년)</td></tr>
+<tr><td>상향 + 하향 따로</td><td>상향 t 2.7 / 하향 t −0.7</td><td>-</td><td>0.0911 (+0.0006, 8/11년)</td></tr>
+</table>
+<p>하향 기사는 다음 달까지 효과가 남지 않는다(테마 스크리닝 결과와 같음). 순지표는 모델 IC가 약간 높지만 회귀 기준(t 2)을 못 넘어, 판정 기준대로 <b>상향만을 본 변수로 유지</b>한다. 교수님께는 "하향도 확인했는데 다음 달 효과가 없어 상향만 쓴다"로 답한다.</p>
+<h2 class='pb'>7. 새로 가져올 만한 피처 아이디어 (외부 데이터)</h2>
+<p>지금 환경에서는 KRX·DART 사이트 접속이 막혀 있어 직접 돌리지 못했다. 팀원 PC에서 pykrx·OpenDART로 받을 수 있는 것 위주로, 선행연구가 있는 것만 골랐다. <span class="em">우선순위</span>는 기대 효과와 준비 난이도를 같이 본 것이다.</p>
+
+<h3>① 주가·거래 데이터 (pykrx로 받기 쉬움)</h3>
+<table>
+<tr><th style="width:4%">#</th><th style="width:20%">피처</th><th>계산</th><th style="width:7%">방향</th><th style="width:27%">근거 논문</th><th style="width:9%">우선</th></tr>
+<tr><td>1</td><td>거래회전율</td><td>월 거래량 / 상장주식수</td><td>−</td><td>Datar, Naik &amp; Radcliffe (1998), J. Financial Markets</td><td>★★★</td></tr>
+<tr><td>2</td><td>아미후드 비유동성</td><td>|일 수익률| / 거래대금의 월평균</td><td>+</td><td>Amihud (2002), J. Financial Markets</td><td>★★★</td></tr>
+<tr><td>3</td><td>거래량 급증</td><td>이번 달 거래량 / 직전 12개월 평균</td><td>+</td><td>Gervais, Kaniel &amp; Mingelgrin (2001), JF</td><td>★★</td></tr>
+<tr><td>4</td><td>일별 최대 수익률 (MAX)</td><td>그달 일 수익률 중 최대</td><td>−</td><td>Bali, Cakici &amp; Whitelaw (2011), JFE</td><td>★★★</td></tr>
+<tr><td>5</td><td>일별 고유변동성</td><td>그달 일 수익률의 시장모형 잔차 표준편차</td><td>−</td><td>Ang, Hodrick, Xing &amp; Zhang (2006), JF</td><td>★★★</td></tr>
+<tr><td>6</td><td>52주 신고가 근접도 (일별)</td><td>종가 / 52주 최고가</td><td>+</td><td>George &amp; Hwang (2004), JF</td><td>★★</td></tr>
+<tr><td>7</td><td>정보 이산성</td><td>12개월 중 오른 날 비율 − 내린 날 비율 × 모멘텀 부호</td><td>+</td><td>Da, Gurun &amp; Warachka (2014), RFS</td><td>★★</td></tr>
+<tr><td>8</td><td>외국인 보유율 변화</td><td>외국인 지분율 3개월 변화</td><td>±</td><td>Choe, Kho &amp; Stulz (2005), RFS</td><td>★★★</td></tr>
+<tr><td>9</td><td>기관 순매수</td><td>기관 순매수 / 시총 (3개월)</td><td>+</td><td>Nofsinger &amp; Sias (1999), JF</td><td>★★</td></tr>
+<tr><td>10</td><td>공매도 잔고 비율</td><td>공매도 잔고 / 상장주식수</td><td>−</td><td>Boehmer, Jones &amp; Zhang (2008), JF</td><td>★★ (2016년 이후만)</td></tr>
+<tr><td>11</td><td>업종 모멘텀</td><td>같은 업종 종목의 12–2개월 평균 수익률</td><td>+</td><td>Moskowitz &amp; Grinblatt (1999), JF</td><td>★★★</td></tr>
+<tr><td>12</td><td>잔차 모멘텀</td><td>시장·업종 영향을 뺀 12–2개월 수익률</td><td>+</td><td>Blitz, Huij &amp; Martens (2011), J. Empirical Finance</td><td>★★★</td></tr>
+<tr><td>13</td><td>업종 대비 변동성·가치</td><td>변동성·B/M을 업종 안 순위로</td><td>원 변수와 같음</td><td>Asness, Porter &amp; Stevens (2000) 업종 조정 가치</td><td>★★</td></tr>
+<tr><td>14</td><td>지수 편입·편출</td><td>코스피200 정기 변경 편입 1 / 편출 −1</td><td>+</td><td>Shleifer (1986), JF</td><td>★</td></tr>
+<tr><td>15</td><td>주간 단기 반전</td><td>그달 마지막 주 수익률</td><td>−</td><td>Lehmann (1990), QJE</td><td>★★</td></tr>
+</table>
+
+<h3>② 재무제표·공시 데이터 (OpenDART)</h3>
+<table>
+<tr><th style="width:4%">#</th><th style="width:20%">피처</th><th>계산</th><th style="width:7%">방향</th><th style="width:27%">근거 논문</th><th style="width:9%">우선</th></tr>
+<tr><td>16</td><td>매출총이익 / 자산 (수익성)</td><td>(매출 − 매출원가) / 총자산</td><td>+</td><td>Novy-Marx (2013), JFE</td><td>★★★</td></tr>
+<tr><td>17</td><td>ROE</td><td>순이익 / 자본</td><td>+</td><td>Hou, Xue &amp; Zhang (2015), RFS</td><td>★★★</td></tr>
+<tr><td>18</td><td>이익 서프라이즈 (SUE)</td><td>(이번 분기 EPS − 1년 전 같은 분기) / 표준편차</td><td>+</td><td>Bernard &amp; Thomas (1989), J. Accounting Research</td><td>★★★</td></tr>
+<tr><td>19</td><td>발생액</td><td>(순이익 − 영업현금흐름) / 총자산</td><td>−</td><td>Sloan (1996), The Accounting Review</td><td>★★</td></tr>
+<tr><td>20</td><td>자산 성장률</td><td>총자산 1년 증가율</td><td>−</td><td>Cooper, Gulen &amp; Schill (2008), JF</td><td>★★</td></tr>
+<tr><td>21</td><td>투자 (CAPEX)</td><td>설비투자 / 총자산</td><td>−</td><td>Titman, Wei &amp; Xie (2004), JFQA</td><td>★</td></tr>
+<tr><td>22</td><td>F-score</td><td>수익성·재무건전성·효율성 9개 신호 합</td><td>+</td><td>Piotroski (2000), J. Accounting Research</td><td>★★</td></tr>
+<tr><td>23</td><td>E/P, CF/P</td><td>순이익·영업현금흐름 / 시총</td><td>+</td><td>Basu (1977), JF; Lakonishok, Shleifer &amp; Vishny (1994), JF</td><td>★★</td></tr>
+<tr><td>24</td><td>R&amp;D 비율</td><td>연구개발비 / 매출</td><td>+</td><td>Chan, Lakonishok &amp; Sougiannis (2001), JF</td><td>★</td></tr>
+<tr><td>25</td><td>자사주 매입 공시</td><td>그달 자사주 취득 결정 공시 1/0</td><td>+</td><td>Ikenberry, Lakonishok &amp; Vermaelen (1995), JFE</td><td>★★</td></tr>
+<tr><td>26</td><td>유상증자 공시</td><td>그달 유상증자 결정 공시 1/0</td><td>−</td><td>Loughran &amp; Ritter (1995), JF</td><td>★★</td></tr>
+<tr><td>27</td><td>내부자 매수</td><td>임원·주요주주 순매수 공시</td><td>+</td><td>Lakonishok &amp; Lee (2001), RFS</td><td>★★</td></tr>
+<tr><td>28</td><td>배당 개시·증가</td><td>배당 결정 공시에서 증가 1</td><td>+</td><td>Michaely, Thaler &amp; Womack (1995), JF</td><td>★</td></tr>
+<tr><td>29</td><td>사업보고서 문장 변화</td><td>전년 보고서와의 문장 유사도</td><td>− (변화 클수록)</td><td>Cohen, Malloy &amp; Nguyen (2020), JF "Lazy Prices"</td><td>★</td></tr>
+<tr><td>30</td><td>공시 불확실성 단어 비율</td><td>불확실성 단어 / 전체 단어</td><td>−</td><td>Loughran &amp; McDonald (2011), JF</td><td>★</td></tr>
+</table>
+
+<h3>③ 거시 변수 (상호작용으로만 의미)</h3>
+<table>
+<tr><th style="width:4%">#</th><th style="width:28%">피처</th><th>쓰는 법</th><th style="width:30%">근거</th></tr>
+<tr><td>31</td><td>VKOSPI(변동성지수) × 베타</td><td>시장 불안할 때 고베타 주식 효과가 달라지는지</td><td>Frazzini &amp; Pedersen (2014), JFE</td></tr>
+<tr><td>32</td><td>원/달러 환율 변화 × 외국인 지분율</td><td>환율 급변 때 외국인 많은 종목의 반응</td><td>-</td></tr>
+<tr><td>33</td><td>신용 스프레드 × 규모</td><td>신용 경색 때 소형주 약세</td><td>-</td></tr>
+</table>
+
+<div class="warn"><b>추천 순서</b>: ① 업종 분류만 받으면 바로 만들 수 있는 <b>업종 모멘텀·잔차 모멘텀·업종 대비 변동성</b>(팀 논의 아이디어와 같음) → ② pykrx 거래량으로 <b>회전율·아미후드·외국인 보유율 변화</b> (다른 팀도 거래량·외국인 보유량으로 성능이 올랐다고 함) → ③ DART <b>수익성(GP/A)·SUE</b>. 거시 변수는 순위 예측에서는 상호작용으로만 의미가 있어 우선순위를 낮춤.</div>
+
+<h2>8. 앞으로의 판정 방향</h2>
+<ol>
+<li><b>새 피처도 같은 4단계 기준</b>(회귀 → 최근 → XGBoost → 다른 모델)을 결과 보기 전에 적고 돌린다.</li>
+<li><b>확인용 기간을 따로 둔다</b>: 2011–2016으로 고르고 2017–2021로 확인. 최종은 2022년 이후.</li>
+<li><b>기존 변수의 변형인지 표시</b>한다. 고유변동성처럼 기존 변수를 대체하는 경우, 바꿀지 같이 쓸지를 따로 정한다.</li>
+<li><b>우선순위</b>: 고유변동성(채택) → 업종 분류를 받아 업종 모멘텀·잔차 모멘텀 → pykrx 거래량으로 회전율·비유동성 → DART 수익성·이익 서프라이즈.</li>
+<li>목표가 상향은 <b>본 가설 변수로 유지</b>(회귀 t 2.5)하고, 정형 피처는 <b>모델 성능용</b>으로 구분해서 보고한다.</li>
+</ol>
+<p class="note">코드: 연습장/yw_run/feat_build_yw.py, feat_screen_yw.py, feat_robust_yw.py, tp_net_yw.py · 결과: 연습장/out_yw/feat_screen.csv, feat_robust.csv, feat_bundle.csv, tp_net_*.csv · 데이터는 v2 이전 정형 데이터(처음 결과와 같음)</p>
+</body></html>
