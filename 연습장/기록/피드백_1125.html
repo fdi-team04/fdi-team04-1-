@@ -1,0 +1,112 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>11/25 피드백</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap">
+<style>
+body{font-family:'Gowun Dodum',sans-serif;font-size:10.3pt;line-height:1.72;color:#2B2B2B;margin:0;}
+.top{display:flex;justify-content:space-between;font-size:9pt;color:#7A7A7A;border-bottom:1px solid #BDBDBD;padding-bottom:1.5mm;margin-bottom:7mm;}
+h1{font-family:'Jua',sans-serif;font-weight:400;font-size:22pt;margin:0 0 1mm;color:#2E4A62;}
+.meta{font-size:9.5pt;color:#6B6B6B;margin-bottom:5mm;}
+h2{font-family:'Jua',sans-serif;font-weight:400;font-size:14.5pt;color:#2E4A62;margin:8mm 0 2mm;page-break-after:avoid;}
+h3{font-family:'Jua',sans-serif;font-weight:400;font-size:11pt;color:#555;margin:3.5mm 0 1mm;page-break-after:avoid;}
+.lead{border-top:1px solid #D5D5D5;border-bottom:1px solid #D5D5D5;padding:2.5mm 0;margin:3mm 0;}
+table{border-collapse:collapse;width:100%;margin:2mm 0;font-size:9.6pt;}
+tr{page-break-inside:avoid;}
+th,td{border-bottom:1px solid #DADADA;padding:1.6mm 2mm;text-align:left;vertical-align:top;}
+th{font-family:'Jua',sans-serif;font-weight:400;color:#444;border-bottom:1.5px solid #8A9BAA;background:#F4F6F8;}
+.q{font-family:'Jua',sans-serif;color:#9A5B22;}
+.fix{color:#2E6B3E;}
+.warn{background:#FBF3E8;border-radius:3mm;padding:2.5mm 4mm;margin:2mm 0;page-break-inside:avoid;}
+.guess{color:#8A8A8A;font-size:9pt;}
+ul,ol{margin:1mm 0;padding-left:6mm;} li{margin:0.8mm 0;}
+.em{font-family:'Jua',sans-serif;color:#2E4A62;}
+</style></head><body>
+<div class="top"><span>금융데이터인텔리전스 4팀</span><span>2026. 11. 25</span></div>
+<h1>11/25 피드백 정리</h1>
+<div class="meta">녹취 기반 · 녹취가 깨진 부분은 <span class="guess">(추정)</span>으로 표시 → 팀원 기억과 맞춰 확인</div>
+
+<div class="lead"><span class="em">한 장 요약</span><br>
+① 교수님은 판을 뒤집지 말고 <b>지금 하는 것을 마무리</b>하라고 하심: 하이퍼파라미터 튜닝이나 정의 다듬기 정도.<br>
+② <b>교수님이 직접 돌려볼 수 있게</b> 실행 안내를 남겨라: 2025년까지(6~7년 더) 확장해서 돌리는 방법과 한계점.<br>
+③ 우리 팀 질문 3개: <b>목표가 기사가 한 달에 몇 개냐</b>, <b>하향 기사는 봤냐</b>(상향−하향으로 넣으면 음의 방향도 반영), <b>키워드가 놓친 비율(재현율)이 무슨 뜻이냐</b>.<br>
+④ 효과가 안 나올 때는 <b>변수를 잘못 만든 건지, 모델에 반영이 안 된 건지</b> 먼저 가려라(모든 팀 공통).<br>
+⑤ 발표 후 팀 논의: 모델은 XGBoost 유지, <b>정형 피처 추가</b>(업종 기준 모멘텀·변동성 등)를 목표가 상향 때처럼 판정 절차로 검증.</div>
+
+<h2>1. 우리 팀 발표와 질의응답</h2>
+<p>우리가 말한 것: ESG 실패 후 테마 여러 개를 같은 기준으로 판정 → 목표가 상향만 통과, 키워드가 임베딩보다 정밀도가 높아 키워드 사용, 정형+뉴스 합친 데이터 결측률 약 28%, 누수 점검 후 거래 관련 변수 수정, 팀 코드로 재현해 보니 비슷하게 나옴, 통제 후 효과 +0.5%.</p>
+<table>
+<tr><th style="width:27%">교수님 질문·말씀</th><th style="width:28%">그 자리 답</th><th>정확한 답·보완 <span class="guess">(기록 확인 후)</span></th></tr>
+<tr><td class="q">효과가 얼마냐</td><td>통제 후 0.5% 상승</td><td class="fix">정형 9개 통제 후 다음 달 월 +0.51%p (t 2.5), 2016–21 +0.47%p (t 1.9)</td></tr>
+<tr><td class="q">지난달 뉴스로 다음 달을 보는 거면 효과가 누적되어야 한다 <span class="guess">(추정)</span></td><td>다른 테마와 달리 효과가 그나마 오래 가는 테마</td><td>좋은 소식은 다음 달까지 남고 나쁜 소식은 그달에 끝나는 경향(테마 판정 결과)</td></tr>
+<tr><td class="q">변수 10개냐 / 다른 팀도 IC가 0.1 근처로 비슷하다 <span class="guess">(추정)</span></td><td>네</td><td>정형 9개 + 목표가 상향 1개. 다른 팀과 IC 수준이 비슷하다는 말씀은 "아무 변수 10개로도 이 정도는 나온다"는 뉘앙스일 수 있음 → 우리 변수가 더해주는 몫을 따로 보여줄 필요</td></tr>
+<tr><td class="q">기사가 평균 몇 개쯤 있나 (한 달에)</td><td>전체 5만 건? 한 달씩은 따로 못 봄</td><td class="fix"><b>정정 필요</b>: 5만은 변수 파일의 행 수(49,985). 실제로는 상위 200 종목 기사 <b>한 달 평균 약 4,800건</b>, 그중 목표가 상향 기사 <b>월 평균 약 51건(약 26종목)</b>. 2001년은 월 4건, 2015년은 96건으로 시기별 차이가 큼</td></tr>
+<tr><td class="q">하향 기사는 없냐, 봤냐</td><td>상향 테마라 하향은 따로 생각 못 함</td><td class="fix"><b>정정 필요</b>: 테마 스크리닝 때 목표가 하향도 판정했음 → "그달에 반영되고 끝"이라 제외. 하향 기사는 월 평균 약 30건(약 17종목)</td></tr>
+<tr><td class="q">상향−하향을 같이 넣으면 음의 방향도 자연스럽게 반영할 수 있지 않나</td><td>-</td><td><b>할 일</b>: 순지표(상향 − 하향)를 같은 판정 기준으로 확인</td></tr>
+<tr><td class="q">키워드가 놓친 비율이 뭐냐 / '목표주가 상향'과 비슷한 다른 표현을 못 찾는다는 거냐</td><td>정밀도는 사람이 확인했고, 놓친 비율(재현율)은 아직 못 잼</td><td>맞음. 예: "목표가 9만원으로 올려"처럼 키워드에 없는 표현. 놓친 기사는 0으로 들어가므로 효과는 과소 추정 쪽 → <b>할 일</b>: 키워드에 안 걸린 기사에서 표본을 뽑아 재현율 측정</td></tr>
+</table>
+
+<h2>2. 교수님 공통 말씀 (모든 팀)</h2>
+<table>
+<tr><th style="width:24%">주제</th><th>내용</th></tr>
+<tr><td>변수 문제인가, 모델 문제인가</td><td>효과가 안 나올 때 <b>변수를 잘못 만들었는지</b>, <b>모델에 반영이 안 되는지</b> 둘 중 무엇인지 정해야 시간을 아낀다. "이건 무조건 된다" 싶은 게 안 되면 피처를 잘못 만든 건 아닌지 먼저 확인</td></tr>
+<tr><td>판을 뒤집지 말 것</td><td>지금 하는 것에서 <b>하이퍼파라미터 튜닝이나 정의 다듬기</b> 정도로 적당히 개선해 보라. 시간을 많이 잡아먹는 새 시도보다 <b>있는 것을 마무리</b></td></tr>
+<tr><td>교수님이 직접 돌려볼 수 있게</td><td>데이터를 2025년까지(6~7년 더) 늘려서 돌린다고 할 때 무엇을 해야 하는지, 실행 방법을 과정 어딘가에 적어두면 교수님이 그대로 실행해 보겠다. 데이터가 없는 경우가 아니면 <b>확장을 고려해서</b> 만들 것</td></tr>
+<tr><td>한계점 적기</td><td>예: "월별 데이터를 쓰기 때문에 ○○는 안 된다" 같은 한계를 적어두면 읽으면서 해보겠다 <span class="guess">(추정)</span></td></tr>
+<tr><td>비슷한 다른 테스트</td><td>중요한 가정은 비슷한 다른 테스트로 한 번 더 확인하면 좋겠다 <span class="guess">(추정)</span></td></tr>
+<tr><td>GPU 서버</td><td>월 50달러 정도 사용 가능, 예약해 두면 그 시간부터 사용. 정말 중요할 때만 <span class="guess">(일부 추정)</span></td></tr>
+<tr><td>동기·근거</td><td>모델링에 시간을 들이려면 그 변수가 왜 될지에 대한 근거(선행연구, 동기)가 먼저 있어야 한다 <span class="guess">(추정)</span></td></tr>
+</table>
+
+<h2>3. 다른 팀 발표에서 참고할 점</h2>
+<ul>
+<li><b>누수 발견 사례</b>: 2019년 5월 기준 예측에 2019년 전체 수익이 반영된 것을 발견하고 고침 → 우리도 같은 종류의 누수가 없는지(연간 값이 월별에 들어가는지) 예원 점검표에 추가</li>
+<li><b>모델 비교</b>: 정형만 있을 땐 XGBoost가 높았는데 뉴스를 넣으니 MLP가 높게 나옴 → 우리 비교 결과(비선형 모델 비슷, 선형만 낮음)와 같은 맥락</li>
+<li><b>노이즈 변수와 비교</b>: 무작위 노이즈 변수를 넣은 것과 비교해 뉴스 변수가 노이즈보다 나은지 확인 → 우리 목표가 변수에도 해볼 만함</li>
+<li><b>뉴스 신호가 며칠 안에 사라짐</b>: 일별 검증으로 전환하는 팀 있음. 우리는 다음 달 예측이라 "다음 달까지 남는 테마만 고른다"는 우리 방식이 이 문제에 대한 답</li>
+<li><b>뉴스-종목 매칭률이 낮음</b>: 빅카인즈 기관 칼럼으로는 종목의 95%가 뉴스 없음 → 제목·본문 매칭으로 전환. 우리는 이미 제목 매칭 + 기간표로 처리함</li>
+<li><b>투자자별 수급에 모멘텀 적용</b>(교수님 지난주 제안): 약간 오름, 특정 연도(2017–18)에 편차가 큼</li>
+<li><b>정형 피처 추가</b>: 거래량 규모, 외국인 보유량을 넣었더니 성능이 꽤 오름</li>
+</ul>
+
+<h2>4. 발표 후 팀 논의</h2>
+<table>
+<tr><th style="width:24%">주제</th><th>내용</th></tr>
+<tr><td>재현</td><td>팀 코드 재현은 계속 진행</td></tr>
+<tr><td>모델 비교 (영섭)</td><td>XGBoost, LightGBM, 랜덤포레스트, 신경망, 릿지 5개 비교 → <b>비선형 모델은 IC 0.091~0.094로 비슷, 선형(릿지)만 낮음</b>. 다만 목표가 상향의 IC 기여는 XGBoost·신경망에서만 나오고 LightGBM·랜덤포레스트에서는 안 나옴. 우리 테마를 입증하는 모델은 XGBoost이므로 <b>XGBoost 유지</b>. 다음 브리핑에서 "다 비교해 봤고 IC는 비슷, 선형보다 확실히 좋다"로 보고. 모델 비교 PDF는 영섭이 정리해서 공유</td></tr>
+<tr><td>아쉬운 점</td><td>ESG·논란형 같은 이전 테마도 다른 모델로 비교했으면 좋았겠지만, 지나간 일이라 이번엔 XGBoost로 감</td></tr>
+<tr><td>정형 피처 추가</td><td>주어진 기본 자료(시가총액, 주식 수, 종가 수익률, 종목명·코드)로 만들 수 있는 피처 검토. 아이디어: <b>업종 기준으로 계산한 모멘텀·변동성</b> (업종별로 계산한 변수가 효과가 좋다는 연구가 많음). 기존 변수와 같이 써도 됨. 목표가 상향 때처럼 <b>판정 기준을 먼저 정하고</b> 결과를 돌려볼 것</td></tr>
+<tr><td>데이터 추가 수집</td><td>주어진 데이터로 안 되면 어떤 피처가 효과가 있었고 무엇을 긁어와야 하는지 목록을 정리 <span class="guess">(발언자 확인 필요)</span></td></tr>
+</table>
+
+<h2>5. 각자 할 일 <span class="guess">(제안 · 팀에서 확정)</span></h2>
+<table>
+<tr><th style="width:11%">누구</th><th>할 일</th><th style="width:26%">관련 피드백</th></tr>
+<tr><td>영섭</td><td>
+<ol>
+<li>모델 비교 PDF 정리·공유 (5개 모델 IC, 목표가 기여가 모델마다 다른 점)</li>
+<li>목표가 <b>순지표(상향 − 하향)</b>를 같은 판정 기준으로 확인</li>
+<li>기사 수 정정 공유: 한 달 평균 전체 약 4,800건, 상향 약 51건, 하향 약 30건</li>
+<li>정형 피처 아이디어 목록: 업종 기준 모멘텀·변동성 등, 판정 기준 먼저 작성</li>
+<li>노이즈 변수 대비 확인 (목표가 변수가 무작위 변수보다 나은지)</li>
+</ol></td><td>질문 2·3, 팀 논의, 다른 팀 참고</td></tr>
+<tr><td>이안</td><td>
+<ol>
+<li>팀 코드 01~06 재현 마무리 (v2), 결과 숫자 공유</li>
+<li>XGBoost 하이퍼파라미터 적당히 튜닝 (학습 기간 안에서만)</li>
+<li>2025년까지 확장해서 돌리는 방법 정리 (교수님 실행용)</li>
+<li>GPU 서버가 필요하면 예약 일정 관리</li>
+</ol></td><td>공통 말씀 2·3, GPU</td></tr>
+<tr><td>예원</td><td>
+<ol>
+<li>정형 피처 추가용 데이터 준비: 업종 분류, 주식 수, 거래량 규모 등 주어진 자료에서 가능한 것</li>
+<li>누수 점검표에 "연간 값이 월별에 들어가는지" 항목 추가 (다른 팀 사례)</li>
+<li>결측률 28%가 어디서 나오는지 한 줄 설명 (대부분 뉴스 미수집 종목인지)</li>
+<li>이론 근거표 변동성 줄 수정 (고유변동성 → 저변동성 효과)</li>
+</ol></td><td>팀 논의, 다른 팀 참고</td></tr>
+<tr><td>아영</td><td>
+<ol>
+<li>실행 안내와 한계점 문서 (README): 데이터 넣는 곳, 실행 명령, 2025년 확장 시 바꿀 것, 한계점</li>
+<li>재현율 측정: 키워드에 안 걸린 기사에서 표본을 뽑아 목표가 상향 기사가 얼마나 숨어 있는지 판정 (예원과 2인 판정)</li>
+<li>숫자 점검 계속 (이안 재현 결과 vs 기준값)</li>
+</ol></td><td>공통 말씀 3·4, 질문 3</td></tr>
+</table>
+<div class="warn"><b>먼저 톡방에 정정할 것 (영섭)</b>: 발표 때 "기사 5만 건", "하향은 안 봤다"고 답한 부분은 기록과 다름. 5만은 변수 파일 행 수이고, 하향은 스크리닝에서 판정해 제외했음. 다음 브리핑 첫머리에 한 줄로 바로잡으면 좋음.</div>
+</body></html>
