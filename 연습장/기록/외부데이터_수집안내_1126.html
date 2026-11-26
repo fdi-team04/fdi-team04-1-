@@ -1,0 +1,86 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>외부 데이터 수집 안내</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap">
+<style>
+body{font-family:'Gowun Dodum',sans-serif;font-size:10.3pt;line-height:1.72;color:#2B2B2B;margin:0;}
+.top{display:flex;justify-content:space-between;font-size:9pt;color:#7A7A7A;border-bottom:1px solid #BDBDBD;padding-bottom:1.5mm;margin-bottom:7mm;}
+h1{font-family:'Jua',sans-serif;font-weight:400;font-size:22pt;margin:0 0 1mm;color:#2E4A62;}
+.meta{font-size:9.5pt;color:#6B6B6B;margin-bottom:5mm;}
+h2{font-family:'Jua',sans-serif;font-weight:400;font-size:14.5pt;color:#2E4A62;margin:8mm 0 2mm;page-break-after:avoid;}
+h3{font-family:'Jua',sans-serif;font-weight:400;font-size:11pt;color:#555;margin:3.5mm 0 1mm;page-break-after:avoid;}
+.lead{border-top:1px solid #D5D5D5;border-bottom:1px solid #D5D5D5;padding:2.5mm 0;margin:3mm 0;}
+table{border-collapse:collapse;width:100%;margin:2mm 0;font-size:9.6pt;}
+tr{page-break-inside:avoid;}
+th,td{border-bottom:1px solid #DADADA;padding:1.6mm 2mm;text-align:left;vertical-align:top;}
+th{font-family:'Jua',sans-serif;font-weight:400;color:#444;border-bottom:1.5px solid #8A9BAA;background:#F4F6F8;}
+.q{font-family:'Jua',sans-serif;color:#9A5B22;}
+.fix{color:#2E6B3E;}
+.warn{background:#FBF3E8;border-radius:3mm;padding:2.5mm 4mm;margin:2mm 0;page-break-inside:avoid;}
+.guess{color:#8A8A8A;font-size:9pt;}
+ul,ol{margin:1mm 0;padding-left:6mm;} li{margin:0.8mm 0;}
+.em{font-family:'Jua',sans-serif;color:#2E4A62;}
+.chk{color:#2E6B3E;font-size:9.3pt;} .pb{page-break-before:always;}</style></head><body>
+<div class="top"><span>금융데이터인텔리전스 4팀</span><span>2026. 11. 26</span></div>
+<h1>외부 데이터 수집 업무 안내</h1>
+<div class="meta">KRX(예원) · OpenDART(아영) · 받은 뒤 판정(영섭) · 11/30 브리핑 전까지</div>
+
+<div class="lead"><span class="em">한 줄 요약</span><br>
+KRX는 이제 <b>로그인해야</b> 데이터를 주고, DART는 <b>본인 인증키</b>가 필요해서 각자 PC에서 받는다. 양이 많으니 <b>1순위(업종 분류, 22개 파일)부터</b> 받고, 원본 그대로 드라이브 '외부데이터' 폴더에 올리면 영섭이 피처를 만들어 판정한다. 가공은 하지 않아도 된다.</div>
+
+<h2>0. 시작 전에 (각자 10분)</h2>
+<table>
+<tr><th style="width:12%">누구</th><th>할 일</th><th style="width:30%">확인</th></tr>
+<tr><td>예원</td><td>① data.krx.co.kr 회원가입·로그인 ② VS Code 터미널에서 pykrx 1분 시험:<br><code>pip install pykrx</code><br><code>python -c "from pykrx import stock; print(stock.get_market_ohlcv('20150130', market='KOSPI').head())"</code></td><td class="chk">표가 나오면 → pykrx로 받기 (영섭이 스크립트 줌)<br>에러·빈 값 → 아래 수동 다운로드</td></tr>
+<tr><td>아영</td><td>① opendart.fss.or.kr 회원가입 → 인증키 신청 ② <code>pip install OpenDartReader pandas</code></td><td class="chk">인증키 메일 수신</td></tr>
+</table>
+
+<h2>1. KRX 수동 다운로드 (예원)</h2>
+<p>사이트 개편으로 메뉴 이름이 조금 다를 수 있다. 화면에서 <b>조회일자를 바꾸고 → 조회 → 다운로드(CSV)</b>를 반복하는 방식이다.</p>
+<table>
+<tr><th style="width:8%">순위</th><th style="width:19%">받을 것</th><th>화면과 조건</th><th style="width:13%">파일 수</th><th style="width:20%">만들 피처</th></tr>
+<tr><td><b>1</b></td><td>업종 분류</td><td>주식 → 업종분류 현황. 시장 KOSPI, 조회일 = <b>매년 12월 마지막 거래일</b> (2000~2020)</td><td><b>21개</b> (약 30분)</td><td>업종 모멘텀, 잔차 모멘텀, 업종 대비 변동성</td></tr>
+<tr><td>2</td><td>월간 거래량·거래대금</td><td>주식 → 전종목 등락률 (기간 조회). 시작일 = 그달 첫 거래일, 종료일 = 그달 마지막 거래일 → <b>기간 합계 거래량·거래대금</b>이 나옴 (2001.01~2021.12)</td><td>252개 (월별)</td><td>회전율, 거래량 급증, 아미후드(월 단위 근사)</td></tr>
+<tr><td>3</td><td>외국인 보유량</td><td>주식 → 외국인 보유량(전종목). 조회일 = 매월 마지막 거래일</td><td>252개</td><td>외국인 지분율 변화</td></tr>
+</table>
+<div class="warn"><b>양 조절</b>: 2·3순위는 각 252번이라 혼자 하면 4~8시간이다. <b>1순위만 먼저 끝내고</b> 톡방에 알리기. 2·3순위는 기간을 나눠서(예: 2001–2010 예원, 2011–2021 다른 팀원) 하거나, 1순위 결과를 보고 할지 정한다.</div>
+<h3>파일 규칙</h3>
+<ul>
+<li>이름: <code>krx_업종_2014.csv</code>, <code>krx_등락률_201503.csv</code>, <code>krx_외국인_201503.csv</code> (조회한 연도·월)</li>
+<li><b>열이나 행을 지우지 말고 원본 그대로</b> 드라이브 <code>외부데이터/KRX/</code>에 올리기</li>
+<li>받은 날짜와 파일 수를 뉴스 정리 이력표에 한 줄 추가</li>
+</ul>
+<p class="chk">완료 확인: ☐ 업종 21개 파일 · 각 파일에 종목코드·종목명·업종명 열이 있음 · ☐ (2순위) 252개 · ☐ (3순위) 252개 · ☐ 이력표 기록</p>
+
+<h2>2. OpenDART 재무제표 (아영)</h2>
+<ol>
+<li>종목 목록 만들기: 예원 정형 데이터의 <code>Stock_Code</code> 열을 중복 없이 <code>codes.csv</code>로 저장 (열 이름 code, 약 1,000개)</li>
+<li>깃의 <code>연습장/data_fetch/dart_fetch.py</code>를 같은 폴더에 두기</li>
+<li>VS Code 터미널(PowerShell)에서 키를 환경변수로 넣고 실행:<br><code>$env:DART_KEY="발급받은키"</code><br><code>python dart_fetch.py codes.csv</code></li>
+<li>1~2시간 걸림. 50종목마다 <code>dart_finstate.csv</code>에 중간 저장됨 (중간에 꺼져도 다시 실행 가능하게 하려면 영섭에게 말하기)</li>
+<li>결과 <code>dart_finstate.csv</code>를 드라이브 <code>외부데이터/DART/</code>에 올리기</li>
+</ol>
+<table>
+<tr><th style="width:26%">받는 항목</th><th>만들 피처</th><th style="width:30%">주의</th></tr>
+<tr><td>매출액, 매출원가, 매출총이익, 자산총계</td><td>수익성 (매출총이익 / 자산) — Novy-Marx (2013)</td><td rowspan="3">DART는 <b>2015 사업연도부터</b>만 있음. 12월 결산 사업보고서는 다음 해 3월 말 공시 → <b>다음 해 4월부터</b> 사용 (available_month 칸)</td></tr>
+<tr><td>자본총계, 당기순이익</td><td>ROE — Hou, Xue &amp; Zhang (2015)</td></tr>
+<tr><td>영업활동현금흐름</td><td>발생액 (순이익 − 영업현금흐름) / 자산 — Sloan (1996)</td></tr>
+</table>
+<div class="warn"><b>키 보안</b>: 인증키는 본인 PC 환경변수에만. 코드 파일, 깃, 톡방, 드라이브에 쓰지 않기. 스크립트는 이 저장소 환경에서 실행해 보지 못했으므로, 에러가 나면 메시지를 캡처해서 영섭에게 보내기.</div>
+<p class="chk">완료 확인: ☐ dart_finstate.csv 행 수 ≈ 종목 수 × 7년 · ☐ 매출액·자산총계 칸이 절반 이상 채워짐 · ☐ 이력표 기록</p>
+
+<h2>3. 받은 뒤 (영섭)</h2>
+<ol>
+<li>피처 계산식과 판정 기준을 먼저 git에 올림 (결과 보기 전)</li>
+<li>미래 정보 규칙 적용: 업종은 전년 12월 말 값, 거래·외국인은 그달 말 값, 재무제표는 공시 후(다음 해 4월)부터</li>
+<li>4단계 판정 + 앞뒤 기간(2011–16 / 2017–21) 안정성 → 통과한 것만 13번째 이후 변수로</li>
+<li>DART 피처는 2015년 이후만 값이 있어 학습 기간이 짧음 → 한계로 기록</li>
+</ol>
+
+<h2>4. 일정</h2>
+<table>
+<tr><th style="width:22%">언제</th><th>할 일</th><th style="width:18%">누구</th></tr>
+<tr><td>11/27 (금)</td><td>회원가입·키 발급, pykrx 시험 결과 톡방 공유</td><td>예원, 아영</td></tr>
+<tr><td>11/28 (토)</td><td>KRX 1순위(업종 21개), DART 실행</td><td>예원, 아영</td></tr>
+<tr><td>11/29 (일)</td><td>업종·재무 피처 판정</td><td>영섭</td></tr>
+<tr><td>11/30 (월)</td><td>브리핑에서 결과 보고, 2·3순위 진행 여부 결정</td><td>전원</td></tr>
+</table>
+</body></html>
