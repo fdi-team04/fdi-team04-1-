@@ -1,0 +1,89 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>최종 변수와 모델 결정</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap">
+<style>
+body{font-family:'Gowun Dodum',sans-serif;font-size:10.3pt;line-height:1.72;color:#2B2B2B;margin:0;}
+.top{display:flex;justify-content:space-between;font-size:9pt;color:#7A7A7A;border-bottom:1px solid #BDBDBD;padding-bottom:1.5mm;margin-bottom:7mm;}
+h1{font-family:'Jua',sans-serif;font-weight:400;font-size:22pt;margin:0 0 1mm;color:#2E4A62;}
+.meta{font-size:9.5pt;color:#6B6B6B;margin-bottom:5mm;}
+h2{font-family:'Jua',sans-serif;font-weight:400;font-size:14pt;color:#2E4A62;margin:8mm 0 2mm;page-break-after:avoid;}
+.lead{border-top:1px solid #D5D5D5;border-bottom:1px solid #D5D5D5;padding:2.5mm 0;margin:3mm 0;}
+table{border-collapse:collapse;width:100%;margin:2mm 0;font-size:9.6pt;}
+th,td{border-bottom:1px solid #DADADA;padding:1.6mm 2mm;text-align:left;vertical-align:top;}
+th{font-family:'Jua',sans-serif;font-weight:400;color:#444;border-bottom:1.5px solid #8A9BAA;background:#F4F6F8;}
+tr{page-break-inside:avoid;}
+.paper{page-break-inside:avoid;margin:3mm 0 4mm;padding-bottom:3mm;border-bottom:1px dashed #D0D0D0;}
+.paper .t{font-family:'Jua',sans-serif;font-size:11pt;color:#2E4A62;}
+.paper .c{font-size:9.3pt;color:#666;margin:0.5mm 0 1.2mm;}
+.paper .k{display:inline-block;min-width:17mm;font-family:'Jua',sans-serif;color:#555;}
+.paper p{margin:0.8mm 0;}
+.link{font-size:8.8pt;color:#3A6A93;word-break:break-all;}
+ul{margin:1mm 0;padding-left:6mm;} li{margin:0.8mm 0;}
+.pass{color:#1F6E3A;font-family:'Jua',sans-serif;} .fail{color:#9A9A9A;} .mid{color:#9A5B22;font-family:'Jua',sans-serif;} img{width:100%;margin:2mm 0;} .warn{background:#FBF3E8;border-radius:3mm;padding:2.5mm 4mm;margin:2mm 0;page-break-inside:avoid;} h3{font-family:'Jua',sans-serif;font-weight:400;font-size:11pt;color:#555;margin:3.5mm 0 1mm;} .pb{page-break-before:always;}</style></head><body>
+<div class="top"><span>금융데이터인텔리전스 4팀</span><span>2026. 11. 26</span></div>
+<h1>최종 변수와 모델 결정</h1>
+<div class="meta">작성: 위영섭 · 근거: 피처추가검토_1125.pdf, 모델 비교(out_yw/model_compare*.csv), 기간 안정성(out_yw/feat_half.csv)</div>
+
+<div class="lead"><span class="em">결론</span><br>
+① <b>모델은 XGBoost</b>로 간다. 비선형 모델끼리 성능은 비슷하지만, 우리 가설 변수(목표가 상향)의 기여가 나오는 모델이 XGBoost이고 재현도 가장 쉽다.<br>
+② <b>최종 변수 12개</b>: 정형 9개 + 목표가 상향 + 고유변동성 + 6개월 모멘텀. 앞뒤 기간(2011–16, 2017–21) 모두에서 IC를 올린 것만 남겼다.<br>
+③ 외부 데이터(업종, 거래량, 외국인 보유, 재무제표)는 이 환경에서 직접 받을 수 없어서 <b>팀원 PC에서 정식 경로로 받고</b>, 같은 판정 기준으로 추가 여부를 정한다.</div>
+
+<h2>1. 외부 데이터 직접 수집 시도 결과</h2>
+<table>
+<tr><th style="width:20%">경로</th><th>결과</th><th style="width:30%">대안</th></tr>
+<tr><td>KRX (pykrx)</td><td>접속 허용 후 시도 → 응답이 "LOGOUT". KRX가 로그인한 회원에게만 데이터를 주도록 바뀜</td><td>팀원이 로그인해서 CSV 다운로드 (안내 문서 준비)</td></tr>
+<tr><td>OpenDART</td><td>접속은 됨. 인증키가 주소 안에 들어가는 방식이라 이 환경에서 키를 안전하게 쓸 수 없음</td><td>팀원이 키 발급 후 본인 PC에서 스크립트 실행 (스크립트 준비)</td></tr>
+<tr><td>네이버 금융</td><td>가격·거래량은 받아지지만 상장폐지 종목이 빠지고, 페이지 대량 수집은 권한 검사에서 막힘(이용약관상 자동 수집 제한)</td><td>사용하지 않음</td></tr>
+</table>
+
+<h2>2. 모델 결정: XGBoost</h2>
+<table>
+<tr><th style="width:22%">판단 기준</th><th>결과</th><th style="width:18%">유리한 모델</th></tr>
+<tr><td>성능</td><td>비선형 4개 평균 IC 0.091~0.094로 비슷, 차이는 통계적으로 의미 없음(t ≤ 1.2). 선형(릿지)만 확실히 낮음(t −2.1)</td><td>비선형 전부</td></tr>
+<tr><td>우리 가설 변수</td><td>목표가 상향을 넣었을 때 IC가 오른 모델: XGBoost(+0.0011, 7/11년), 신경망(+0.0016, 6/11년). LightGBM·랜덤포레스트는 안 오름</td><td>XGBoost, 신경망</td></tr>
+<tr><td>새 피처 반영</td><td>고유변동성·6개월 모멘텀을 넣으면 XGBoost 0.0964(t 3.2), LightGBM 0.0973(t 3.8), 랜덤포레스트 0.0970(t 2.0), 신경망 0.0947(t 0.9)</td><td>나무 계열</td></tr>
+<tr><td>재현성</td><td>seed 고정 시 같은 결과, 실행 9초. 신경망은 seed에 따라 흔들리고 실행이 10배 느림, 랜덤포레스트도 15배 느림</td><td>XGBoost, LightGBM</td></tr>
+<tr><td>이미 해 둔 것</td><td>팀 코드(04_model), 모든 판정, 재현 계획이 XGBoost 기준</td><td>XGBoost</td></tr>
+</table>
+<p><b>정리</b>: 세 조건(가설 변수 기여, 새 피처 반영, 재현성)을 모두 만족하는 모델은 XGBoost뿐이다. 다른 모델은 보고서에 "모델을 바꿔도 IC 수준은 비슷했다"는 강건성 확인으로 넣는다.</p>
+
+<h2>3. 최종 변수 확정 (12개)</h2>
+<table>
+<tr><th style="width:5%">#</th><th style="width:20%">변수</th><th>근거</th><th style="width:17%">출처</th></tr>
+<tr><td>1–9</td><td>정형 9개</td><td>베타, 규모, B/M, 단기 반전, 모멘텀, 변동성, 주식 발행, 개인·외국인 순매수 (기존 판정 완료)</td><td>기존</td></tr>
+<tr><td>10</td><td>목표가 상향</td><td>통제 후 +0.51%p (t 2.5), 본 가설 변수</td><td>뉴스</td></tr>
+<tr><td>11</td><td>고유변동성</td><td>4단계 판정 모두 통과. 2017–21에 더 강함(t 2.3). Ang et al. (2006)</td><td>기본 데이터</td></tr>
+<tr><td>12</td><td>6개월 모멘텀</td><td>XGBoost IC +0.0035 (t 2.5, 8/11년), 앞뒤 기간 모두 상승(4/6, 4/5). Jegadeesh &amp; Titman (1993)</td><td>기본 데이터</td></tr>
+</table>
+<h3>기간 안정성 확인 (XGBoost, 현재 모델 대비 IC 변화)</h3>
+<table>
+<tr><th style="width:24%">피처</th><th>2011–16</th><th>2017–21</th><th style="width:22%">결정</th></tr>
+<tr><td>고유변동성</td><td>+0.0018 (t 1.4, 3/6년)</td><td>+0.0034 (t 2.3, 3/5년)</td><td class="pass">채택</td></tr>
+<tr><td>6개월 모멘텀</td><td>+0.0039 (t 2.3, 4/6년)</td><td>+0.0029 (t 1.3, 4/5년)</td><td class="pass">채택</td></tr>
+<tr><td>고유변동성 + 6개월 모멘텀</td><td>+0.0055 (t 2.9, 5/6년)</td><td>+0.0040 (t 1.6, 4/5년)</td><td class="pass">함께 사용</td></tr>
+<tr><td>52주 고점 근접</td><td>+0.0037 (t 1.9, 5/6년)</td><td>+0.0007 (t 0.3, 2/5년)</td><td class="fail">제외 (최근 약화)</td></tr>
+<tr><td>장기 반전</td><td>+0.0028 (5/6년)</td><td>−0.0005 (2/5년)</td><td class="fail">제외 (최근 소멸)</td></tr>
+<tr><td>최대 월수익률</td><td>+0.0008 (4/6년)</td><td>−0.0000 (2/5년)</td><td class="fail">제외</td></tr>
+<tr><td>장부가치 성장</td><td>+0.0005 (4/6년)</td><td>+0.0008 (4/5년)</td><td class="fail">제외 (효과 너무 작음)</td></tr>
+</table>
+<div class="warn"><b>남은 확인</b>: 피처를 고른 기간과 평가한 기간이 겹친다. 최종 확인은 2022년 이후(테스트) 결과로 한다. 고유변동성은 기존 '변동성'(총변동성)과 같이 넣었을 때 결과이므로 둘 다 유지한다.</div>
+
+<h2>4. 외부 데이터: 받은 뒤 판정할 후보</h2>
+<table>
+<tr><th style="width:22%">피처</th><th style="width:22%">데이터</th><th>근거</th><th style="width:20%">주의</th></tr>
+<tr><td>업종 모멘텀, 잔차 모멘텀</td><td>KRX 업종 분류</td><td>Moskowitz &amp; Grinblatt (1999); Blitz, Huij &amp; Martens (2011)</td><td>전년 12월 말 업종 사용</td></tr>
+<tr><td>회전율, 아미후드 비유동성</td><td>KRX 거래량·거래대금</td><td>Datar et al. (1998); Amihud (2002)</td><td>월말 기준</td></tr>
+<tr><td>외국인 지분율 변화</td><td>KRX 외국인 보유량</td><td>Choe, Kho &amp; Stulz (2005)</td><td>방향 양쪽 허용</td></tr>
+<tr><td>수익성(GP/A), ROE</td><td>DART 재무제표</td><td>Novy-Marx (2013); Hou, Xue &amp; Zhang (2015)</td><td>2015년 이후만 있음, 공시 후(다음 해 4월)부터 사용</td></tr>
+</table>
+<p>판정은 지금과 같은 4단계(회귀 → 최근 → XGBoost → 다른 모델)에 <b>앞뒤 기간 안정성</b>을 더해서, 기준을 먼저 적고 돌린다. DART 피처는 2015년부터라 학습 기간이 짧은 점을 한계로 적는다.</p>
+
+<h2>5. 팀원별 할 일 <span class="guess">(제안 · 다음 브리핑 전까지)</span></h2>
+<table>
+<tr><th style="width:10%">누구</th><th>할 일</th><th style="width:28%">준비된 것</th></tr>
+<tr><td>영섭</td><td><ol><li>최종 12개 변수 결과 정리, 팀 공유</li><li>외부 데이터가 오면 바로 돌릴 판정 코드 준비, 판정 기준 먼저 커밋</li><li>모델 비교 결과를 보고서용 한 쪽으로</li></ol></td><td>feat_*.py, model_compare_yw.py</td></tr>
+<tr><td>이안</td><td><ol><li>팀 코드 02_features에 고유변동성·6개월 모멘텀 추가 (계산식은 feat_build_yw.py)</li><li>v2 데이터로 12개 변수 XGBoost 재현</li><li>XGBoost 튜닝은 학습 기간 안에서만, 2025년 확장 실행 안내</li></ol></td><td>연습장/yw_run/feat_build_yw.py</td></tr>
+<tr><td>예원</td><td><ol><li><b>KRX 로그인 후 수동 다운로드</b>: 업종 분류(매년 12월 말), 거래량·거래대금, 외국인 보유량(매월 말)</li><li>받은 날짜를 이력표에 기록</li><li>이론 근거표에 고유변동성·6개월 모멘텀 추가</li></ol></td><td>data_fetch/KRX_수동다운로드_안내.md</td></tr>
+<tr><td>아영</td><td><ol><li><b>OpenDART 인증키 발급 → dart_fetch.py 실행</b> (2015–2021 재무제표)</li><li>키는 본인 PC 환경변수에만, 깃·톡방에 올리지 않기</li><li>재현율 측정, 실행 안내 README</li></ol></td><td>data_fetch/dart_fetch.py (이 환경에서는 테스트 못 함)</td></tr>
+</table>
+</body></html>
